@@ -1,37 +1,787 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Datenschutzerklärung – Kreisliga Fußballmanager</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jobro Games</title>
+  <meta name="description" content="Jobro Games – Indie Game Development. Featured: Kreisliga Fußballmanager." />
+
+  <style>
+    :root{
+      --bg:#070707;
+      --panel:#0f0f10;
+      --panel2:#121214;
+      --border:#1f1f22;
+      --text:#f4f4f5;
+      --muted:#b8b8c1;
+      --muted2:#8b8b94;
+      --shadow: 0 10px 40px rgba(0,0,0,.55);
+      --radius: 16px;
+      --radius2: 22px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", sans-serif;
+        color:var(--text);
+        background: var(--bg);
+        overflow-x:hidden;
+    }
+
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1120px; margin:0 auto; padding:0 18px}
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(7,7,7,.55);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      letter-spacing:.5px;
+    }
+    .brand-badge{
+      width:38px; height:38px;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:12px;
+      display:grid; place-items:center;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      box-shadow: 0 8px 25px rgba(0,0,0,.45);
+      font-weight:800;
+    }
+    .brand-title{font-weight:800}
+    .brand-sub{font-size:12px; color:var(--muted2); margin-top:1px}
+
+    .nav-links{display:flex; gap:14px; align-items:center}
+    .nav-links a{
+      font-size:14px; color:var(--muted);
+      padding:8px 10px; border-radius:10px;
+      transition:.2s ease;
+    }
+    .nav-links a:hover{
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+    }
+
+    .hero{
+      padding:56px 0 18px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:22px;
+      align-items:stretch;
+    }
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns:1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-left{padding:28px}
+    .kicker{
+      display:inline-flex; align-items:center; gap:10px;
+      font-size:12px;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      padding:8px 12px;
+      border-radius:999px;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:99px;
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 0 0 6px rgba(255,255,255,.10);
+    }
+
+    h1{
+      margin:14px 0 10px;
+      font-size:46px;
+      line-height:1.05;
+      letter-spacing:-.6px;
+    }
+    @media (max-width: 520px){
+      h1{font-size:36px}
+    }
+
+    .lead{
+      margin:0;
+      color: var(--muted);
+      font-size:16px;
+      line-height:1.6;
+      max-width:58ch;
+    }
+
+    .cta-row{
+      display:flex; flex-wrap:wrap; gap:12px;
+      margin-top:18px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:700;
+      transition:.2s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{
+      background: rgba(255,255,255,.12);
+      transform: translateY(-1px);
+    }
+    .btn.primary{
+      background: #ffffff;
+      color:#0b0b0b;
+      border-color: rgba(255,255,255,.9);
+    }
+    .btn.primary:hover{
+      background:#f0f0f0;
+    }
+    .btn small{font-weight:600; opacity:.8}
+
+    .mini{
+      margin-top:14px;
+      color: var(--muted2);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .hero-right{padding:18px; display:flex; flex-direction:column; gap:14px}
+    .slider{
+      position:relative;
+      overflow:hidden;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.35);
+      min-height:320px;
+    }
+    .slides{
+      display:flex;
+      width:100%;
+      height:100%;
+      transition: transform .45s ease;
+    }
+    .slide{
+      min-width:100%;
+      height:320px;
+      display:grid;
+      place-items:center;
+      position:relative;
+      background:
+        radial-gradient(700px 240px at 50% 20%, rgba(255,255,255,.09), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+    }
+
+    /* Falls du Screenshots einfügst:
+       Lege später /assets/s1.jpg ... /assets/s5.jpg ins Repo.
+       Dann werden automatisch echte Bilder angezeigt.
+    */
+    .slide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      opacity:.92;
+      display:block;
+    }
+    .placeholder{
+      text-align:center;
+      padding:18px;
+      color: var(--muted);
+      font-size:14px;
+      line-height:1.5;
+    }
+    .placeholder strong{color:var(--text)}
+    .slider-ui{
+      position:absolute; inset:auto 12px 12px 12px;
+      display:flex; justify-content:space-between; align-items:center;
+      gap:12px;
+      pointer-events:none;
+    }
+    .pills{
+      display:flex; gap:8px; align-items:center; pointer-events:auto;
+    }
+    .pill{
+      width:8px; height:8px; border-radius:99px;
+      background: rgba(255,255,255,.28);
+      border:1px solid rgba(255,255,255,.22);
+      cursor:pointer;
+    }
+    .pill.active{background: rgba(255,255,255,.85)}
+    .arrows{
+      display:flex; gap:8px; pointer-events:auto;
+    }
+    .icon-btn{
+      width:38px; height:38px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.28);
+      display:grid; place-items:center;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+    .icon-btn:hover{background: rgba(255,255,255,.10)}
+    .icon{
+      width:14px; height:14px;
+      border-right:2px solid rgba(255,255,255,.85);
+      border-bottom:2px solid rgba(255,255,255,.85);
+      transform: rotate(135deg);
+      margin-left:2px;
+    }
+    .icon.next{transform: rotate(-45deg); margin-left:-2px}
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    @media (max-width: 520px){
+      .stats{grid-template-columns:1fr}
+    }
+    .stat{
+      padding:14px 14px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .stat .big{font-weight:900; font-size:18px}
+    .stat .small{color:var(--muted2); font-size:12px; margin-top:4px}
+
+    section{padding:26px 0}
+    .section-title{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:16px;
+      margin:18px 0 14px;
+    }
+    .section-title h2{
+      margin:0;
+      font-size:22px;
+      letter-spacing:-.2px;
+    }
+    .section-title p{
+      margin:0;
+      color: var(--muted2);
+      font-size:13px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width: 980px){
+      .grid-2{grid-template-columns:1fr}
+    }
+
+    .panel{padding:20px}
+    .panel h3{margin:0 0 10px; font-size:16px}
+    .panel ul{margin:0; padding-left:18px; color:var(--muted); line-height:1.7}
+    .panel li{margin:6px 0}
+
+    .feature-grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .feature-grid{grid-template-columns:1fr}
+    }
+    .feature{
+      padding:18px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .feature .title{font-weight:900; margin-bottom:6px}
+    .feature .desc{color:var(--muted); font-size:14px; line-height:1.55}
+
+    .divider{
+      height:1px; background: rgba(255,255,255,.08);
+      margin: 22px 0;
+    }
+
+    footer{
+      margin-top: 30px;
+      border-top:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.25);
+    }
+    .footer-inner{
+      padding:22px 0;
+      display:flex; flex-wrap:wrap;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      color: var(--muted2);
+      font-size:13px;
+    }
+    .footer-links{display:flex; gap:12px; flex-wrap:wrap}
+    .footer-links a{
+      color: var(--muted);
+      padding:6px 10px;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .footer-links a:hover{
+      color: var(--text);
+      background: rgba(255,255,255,.08);
+    }
+
+    /* Smooth reveal */
+    .reveal{opacity:0; transform: translateY(10px); transition: .55s ease}
+    .reveal.show{opacity:1; transform: translateY(0)}
+    .brand-logo{
+        width:42px;
+        height:42px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        }
+
+        .brand-logo img{
+        max-width:100%;
+        max-height:100%;
+        object-fit:contain;
+        }
+    body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:
+        radial-gradient(1200px 600px at 50% -120px, rgba(255,255,255,.10), transparent 60%),
+        radial-gradient(900px 500px at 15% 10%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(900px 500px at 85% 20%, rgba(255,255,255,.05), transparent 60%);
+    }
+    html{
+    scroll-behavior: smooth;
+    }
+    .brand-logo img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
+.game-layout{
+  display:grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap:40px;
+  align-items:center;
+}
+
+.game-right{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.game-right img{
+  max-width:100%;
+  height:auto;
+  opacity:0.95;
+  transition:0.3s ease;
+}
+
+
+/* Mobile */
+@media (max-width: 980px){
+  .game-layout{
+    grid-template-columns:1fr;
+  }
+
+  .game-right{
+    margin-top:30px;
+  }
+}
+
+.game-layout{
+  display:grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap:50px;
+  align-items:center;
+  position:relative;
+}
+
+.game-left{
+  position:relative;
+  z-index:2;
+}
+
+.game-right{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+}
+
+.game-right img{
+  max-width:420px;
+  width:100%;
+  height:auto;
+  opacity:0.96;
+  transition:0.4s ease;
+  filter: drop-shadow(0 30px 60px rgba(0,0,0,.6));
+}
+
+/* dezenter Glow hinter Logo */
+.game-right::before{
+  content:"";
+  position:absolute;
+  width:480px;
+  height:480px;
+  background:radial-gradient(circle, rgba(255,255,255,.12), transparent 60%);
+  z-index:-1;
+  border-radius:50%;
+}
+
+@media (max-width: 980px){
+  .game-layout{
+    grid-template-columns:1fr;
+    gap:30px;
+  }
+
+  .game-right{
+    order:-1;
+  }
+
+  .game-right img{
+    max-width:280px;
+  }
+
+  .hero-cta{
+    width:100%;
+    text-align:center;
+  }
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.12);
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.65);
+}
+.game-right img{
+  width:260px;           /* <- hier die Zielbreite */
+  max-width:100%;
+  height:auto;
+  opacity:0.96;
+  transition:0.4s ease;
+  filter: drop-shadow(0 25px 50px rgba(0,0,0,.55));
+}
+
+.game-layout{
+  grid-template-columns: 1.4fr 0.6fr;
+}
+
+.icon-links{
+  display:flex;
+  gap:20px;
+  margin-top:14px;
+}
+
+.icon-link{
+  width:50px;
+  height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.05);
+  transition:.25s ease;
+}
+
+.icon-link:hover{
+  background:rgba(255,255,255,.12);
+  transform:translateY(-3px);
+}
+
+.icon-link img{
+  width:26px;
+  height:26px;
+  object-fit:contain;
+}
+
+section{
+  scroll-margin-top: 90px;
+}
+
+  </style>
 </head>
+
 <body>
-  <h1>Datenschutzerklärung</h1>
+  <div class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <div class="brand">
+          <div class="brand-logo">
+            <img src="/assets/logo.png" alt="Jobro Games Logo">
+            </div>
+          <div>
+            <div class="brand-title">Jobro Games</div>
+            <div class="brand-sub">Indie Games • Fokus auf Tiefe</div>
+          </div>
+        </div>
+        <div class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#about">About</a>
+          <a href="/privacy.html">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <p>
-    Diese Datenschutzerklärung gilt für die Android-App
-    <strong>Kreisliga Fußballmanager</strong>.
-  </p>
+  <main class="container">
 
-  <h2>Verantwortlicher</h2>
-  <p>
-    Entwickler: Johannes Schuler<br>
-    E-Mail: jsschuler.js@gmail.com
-  </p>
+    <!-- GAME -->
+    <section id="game" class="reveal">
 
-  <h2>Werbung (Google AdMob)</h2>
-  <p>
-    Diese App verwendet Google AdMob. Google kann Geräteinformationen
-    und Werbe-IDs zur Anzeige personalisierter oder nicht-personalisierter
-    Werbung verarbeiten.
-  </p>
+  <div class="section-title">
+    <h2>Kreisliga Fußballmanager</h2>
+    <p>Langfristiger Aufbau • Realistische Simulation • Amateur-Fokus</p>
+  </div>
 
-  <h2>Google Play Services</h2>
-  <p>
-    Die App nutzt Google Play Services.
-  </p>
+  <div class="card panel game-layout">
 
-  <p>
-    <a href="https://policies.google.com/privacy">Google Datenschutzerklärung</a>
-  </p>
+    <!-- LINKER BEREICH -->
+    <div class="game-left">
+      <p class="lead" style="max-width:none">
+        Kreisliga Fußballmanager ist ein tiefgehendes Fußball-Managerspiel mit einem klaren Fokus auf Amateurfußball,
+        langfristigen Vereinsaufbau und eine realistische Welt-Simulation.
+        Du startest ganz unten und arbeitest dich Saison für Saison nach oben – mit Aufstiegen, Rückschlägen
+        und strategischen Entscheidungen abseits des Platzes.
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>🌍 Eine riesige Fußball-Welt</h3>
+          <ul>
+            <li>Über <strong>35.000 Vereine</strong> weltweit</li>
+            <li>Mehr als <strong>2.400 Ligen & Wettbewerbe</strong></li>
+            <li>Erste Ligen aus fast allen Ländern</li>
+            <li>Kompletter Amateurfußball in Deutschland</li>
+            <li>Jede Karriere: dein Team, dein Weg, deine Story</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>⚽ Dein Verein, deine Entscheidungen</h3>
+          <ul>
+            <li>Individuell generierte Mannschaften</li>
+            <li>Aufstellung & Taktik frei wählbar</li>
+            <li>Training & Entwicklung steuern</li>
+            <li>Scouting & Kaderplanung</li>
+            <li>Echte Auf- und Abstiege pro Saison</li>
+          </ul>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- RECHTER BEREICH -->
+    <div class="game-right">
+
+    <a class="btn primary hero-cta"
+        href="https://play.google.com/store/apps/details?id=de.kreisliga.manager"
+        target="_blank" rel="noopener">
+        ▶ Jetzt im Play Store ansehen
+    </a>
+    <img src="/assets/kreisliga-logo.png" alt="Kreisliga Fußballmanager Logo">
+    </div>
+
+  </div>
+
+</section>
+
+    <!-- FEATURES -->
+    <section id="features" class="reveal">
+      <div class="section-title">
+        <h2>Warum das Spiel anders ist</h2>
+        <p>Detailtiefe für alle, die lieber aufbauen als nur gewinnen</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="title">Gigantische Datenbank</div>
+          <div class="desc">Über 35.000 Vereine, tausende Ligen & Wettbewerbe – inklusive kompletter Amateur-Strukturen.</div>
+        </div>
+        <div class="feature">
+          <div class="title">Langzeit-Motivation</div>
+          <div class="desc">Saison für Saison wachsen. Der Weg nach oben ist lang – genau das macht den Reiz aus.</div>
+        </div>
+        <div class="feature">
+          <div class="title">Management & Aufbau</div>
+          <div class="desc">Klubzentrum, Finanzen, Planung – langfristige Entwicklung statt schneller „One-Season“ Erfolge.</div>
+        </div>
+        <div class="feature">
+          <div class="title">Taktik & Entscheidungen</div>
+          <div class="desc">Aufstellung, Training, Kaderbau – du formst deinen Spielstil und deine Vereinsgeschichte.</div>
+        </div>
+        <div class="feature">
+          <div class="title">Realistische Simulation</div>
+          <div class="desc">Eine lebendige Fußballwelt mit Auf- und Abstiegen, Rückschlägen und echten Stories pro Karriere.</div>
+        </div>
+        <div class="feature">
+          <div class="title">Indie – direkt & ehrlich</div>
+          <div class="desc">Kein Studio-Blabla. Einfach ein Game, das über Jahre besser wird. Schritt für Schritt.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="reveal">
+      <div class="section-title">
+        <h2>About Jobro Games</h2>
+        <p>klein • unabhängig • Fokus auf Systemtiefe</p>
+      </div>
+
+      <div class="card panel">
+        <p class="lead" style="max-width:none">
+          Jobro Games ist ein kleines Indie-Projekt. Ich baue Spiele nebenbei – ohne großes Team,
+          aber mit viel Liebe für Details. Wenn du Fußball liebst, Amateur-Strukturen feierst und
+          lieber langfristig etwas aufbaust, bist du hier richtig.
+        </p>
+
+        <div class="divider"></div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Philosophie</h3>
+            <ul>
+              <li>Systeme statt Show</li>
+              <li>Langfristiger Fortschritt statt kurzer Hype</li>
+              <li>Spieler sollen ihre eigene Geschichte schreiben</li>
+            </ul>
+          </div>
+            <div class="panel">
+            <h3>Kontakt & Community</h3>
+
+            <div class="icon-links">
+
+                <a href="https://play.google.com/store/apps/details?id=de.kreisliga.manager"
+                target="_blank" rel="noopener"
+                class="icon-link">
+                <img src="/assets/icons/google-play.png" alt="Google Play">
+                </a>
+
+                <a href="https://discord.gg/mZrKCEYVQP"
+                target="_blank" rel="noopener"
+                class="icon-link">
+                <img src="/assets/icons/discord.png" alt="Discord">
+                </a>
+
+            </div>
+            </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="height:22px"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div>© <span id="year"></span> Jobro Games</div>
+        <div class="footer-links">
+          <a href="/privacy.html">Datenschutzerklärung</a>
+          <!-- Optional: später ergänzen -->
+          <!-- <a href="/impressum.html">Impressum</a> -->
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Reveal on scroll
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){
+        if(e.isIntersecting) e.target.classList.add("show");
+      }
+    }, {threshold: 0.12});
+    els.forEach(el => io.observe(el));
+
+    // Slider
+    const slidesEl = document.getElementById("slides");
+    const sliderEl = document.getElementById("slider");
+    const total = slidesEl.children.length;
+    const pillsEl = document.getElementById("pills");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let idx = 0;
+    let autoTimer = null;
+
+    function renderPills(){
+      pillsEl.innerHTML = "";
+      for(let i=0;i<total;i++){
+        const p = document.createElement("div");
+        p.className = "pill" + (i===idx ? " active" : "");
+        p.title = "Slide " + (i+1);
+        p.onclick = () => go(i);
+        pillsEl.appendChild(p);
+      }
+    }
+
+    function go(n){
+      idx = (n + total) % total;
+      slidesEl.style.transform = "translateX(" + (-idx*100) + "%)";
+      renderPills();
+      restartAuto();
+    }
+
+    function prev(){ go(idx - 1); }
+    function next(){ go(idx + 1); }
+
+    function restartAuto(){
+      if(autoTimer) clearInterval(autoTimer);
+      autoTimer = setInterval(next, 5500);
+    }
+
+    prevBtn.onclick = prev;
+    nextBtn.onclick = next;
+
+    // Swipe (mobile)
+    let startX = null;
+    sliderEl.addEventListener("touchstart", (e)=>{
+      startX = e.touches[0].clientX;
+    }, {passive:true});
+    sliderEl.addEventListener("touchend", (e)=>{
+      if(startX == null) return;
+      const endX = e.changedTouches[0].clientX;
+      const diff = endX - startX;
+      if(Math.abs(diff) > 40){
+        diff > 0 ? prev() : next();
+      }
+      startX = null;
+    }, {passive:true});
+
+    // init
+    renderPills();
+    go(0);
+    restartAuto();
+  </script>
 </body>
 </html>
