@@ -155,6 +155,40 @@
       line-height:1.05;
       letter-spacing:-.7px;
     }
+
+    .download-title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .download-title-row h3{
+      flex:1 1 auto;
+      min-width:0;
+    }
+    .download-count{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      color:#fff;
+      font-size:12px;
+      font-weight:900;
+      line-height:1;
+      white-space:nowrap;
+      backdrop-filter:blur(8px);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .download-count.is-loading{
+      color:var(--muted);
+    }
+    .download-count.is-error{
+      color:var(--muted2);
+    }
     .download-card p{
       margin:0;
       color:var(--muted);
@@ -240,6 +274,8 @@
         padding:22px 18px 18px;
       }
       .download-card h3{font-size:31px}
+      .download-title-row{gap:10px}
+      .download-count{padding:7px 9px; font-size:11px}
     }
   </style>
 </head>
@@ -271,7 +307,10 @@
         <!-- Optional background: replace the path with your own PNG/WebP. The image is shown with 40% opacity. -->
         <article class="download-card" style="--card-bg:url('/assets/community/trophy-pack-bg.png')">
           <div class="download-kicker">Community Content</div>
-          <h3>Trophy Pack</h3>
+          <div class="download-title-row">
+            <h3>Trophy Pack</h3>
+            <span class="download-count is-loading" data-github-asset="trophies.zip">Loading...</span>
+          </div>
           <p>Over 500 trophy images for leagues, national cups and international competitions.</p>
 
           <div class="download-meta">
@@ -287,7 +326,10 @@
 
         <article class="download-card" style="--card-bg:url('/assets/community/cupnames-bg.png')">
           <div class="download-kicker">Community Content</div>
-          <h3>Real Cup Names Pack</h3>
+          <div class="download-title-row">
+            <h3>Real Cup Names Pack</h3>
+            <span class="download-count is-loading" data-github-asset="National.Cups.fix.zip">Loading...</span>
+          </div>
           <p>Enables real tournament names in the game.</p>
 
           <div class="download-meta">
@@ -359,6 +401,53 @@
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
+
+    const GITHUB_OWNER = "derabraham";
+    const GITHUB_REPO = "content-center";
+
+    function formatDownloadCount(count){
+      const value = Number(count) || 0;
+      return value === 1 ? "1 Download" : `${value.toLocaleString("en-US")} Downloads`;
+    }
+
+    async function loadGithubDownloadCounts(){
+      const countEls = Array.from(document.querySelectorAll("[data-github-asset]"));
+      if(!countEls.length) return;
+
+      try{
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`, {
+          headers: { "Accept": "application/vnd.github+json" }
+        });
+
+        if(!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+
+        const releases = await response.json();
+        const assetCounts = new Map();
+
+        releases.forEach(release => {
+          (release.assets || []).forEach(asset => {
+            assetCounts.set(asset.name, asset.download_count || 0);
+          });
+        });
+
+        countEls.forEach(el => {
+          const assetName = el.dataset.githubAsset;
+          const count = assetCounts.get(assetName) || 0;
+          el.textContent = formatDownloadCount(count);
+          el.classList.remove("is-loading", "is-error");
+        });
+      }catch(error){
+        console.warn("Could not load GitHub release download counts:", error);
+
+        countEls.forEach(el => {
+          el.textContent = "Downloads unavailable";
+          el.classList.remove("is-loading");
+          el.classList.add("is-error");
+        });
+      }
+    }
+
+    loadGithubDownloadCounts();
 
     const els = Array.from(document.querySelectorAll(".reveal"));
     const io = new IntersectionObserver((entries)=>{
