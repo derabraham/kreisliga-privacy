@@ -197,3 +197,42 @@ tr.selected td{background:#10283c!important}
 @media(max-width:1250px){.club-grid col.club-col-short{width:7%}.club-grid col.club-col-members{width:7%}.club-grid col.club-col-region{width:10%}.club-grid col.club-col-color{width:55px}.club-grid col.club-col-actions{width:105px}.club-grid .sort-header{font-size:8px}.club-row-actions .danger{display:none}}
 
 .club-draft-note b{color:#eaf8ff}.club-draft-note{white-space:nowrap}
+
+/* v14: player-grid column guides + stronger OVR emphasis */
+.player-grid th:not(:first-child),
+.player-grid td:not(:first-child){
+  border-left:1px solid rgba(117,161,194,.13);
+}
+.player-grid th.player-col-overall{
+  background:linear-gradient(180deg,rgba(39,168,221,.16),rgba(13,25,40,.98));
+  color:#b8edff;
+}
+.player-grid td.player-col-overall{
+  background:rgba(32,162,217,.045);
+}
+.player-grid td.player-col-overall .grid-rating{
+  font-weight:900;
+  color:#b7edff;
+  text-align:center;
+  background:rgba(31,157,214,.13);
+  border-color:rgba(74,194,239,.28);
+  font-variant-numeric:tabular-nums;
+}
+.player-grid td.player-col-overall .grid-rating:hover{
+  background:rgba(31,157,214,.18);
+  border-color:rgba(74,194,239,.40);
+}
+.player-grid td.player-col-overall .grid-rating:focus{
+  background:#092033;
+  border-color:#45c5f2;
+  box-shadow:0 0 0 2px rgba(69,197,242,.12);
+}
+.player-grid tr:hover td.player-col-overall{background:rgba(31,157,214,.075)}
+.player-grid tr.selected td.player-col-overall{background:#123047!important}
+.details-drawer .drawer-overall input{
+  font-weight:900;
+  color:#b7edff;
+  text-align:center;
+  background:rgba(31,157,214,.10);
+  border-color:rgba(74,194,239,.28);
+}

@@ -1372,7 +1372,7 @@ function renderPlayerGrid(list, options) {
   const selectedAll = Boolean(sorted.length) && sorted.every(p => state.selected.has(String(p.id)));
   const selectedSome = sorted.some(p => state.selected.has(String(p.id)));
   const cols = `<colgroup><col class="col-check">${playerColumns.map(([key]) => `<col class="col-${esc(key)}">`).join('')}<col class="col-playerImage"><col class="col-details"></colgroup>`;
-  els.content.innerHTML = searchToolbar(club ? `Search ${club.name} squad…` : 'Search players…', '<span class="grid-note">Paste tab-separated Excel rows directly · click a column title to sort.</span>') + `<div class="table-wrap player-grid"><table>${cols}<thead><tr><th class="sticky-check"><input type="checkbox" id="selectAllPlayers" ${selectedAll ? 'checked' : ''} aria-label="Select all filtered players"></th>${playerColumns.map(([key, label]) => `<th>${playerSortHeader(key, label)}</th>`).join('')}<th class="player-image-head">${playerSortHeader('faceMode', 'Image')}</th><th class="details-head"><span class="sr-only">Details</span></th></tr></thead><tbody id="playerBody">${rows.map(p => { const selected = state.selected.has(String(p.id)); return `<tr class="${selected ? 'selected' : ''}" data-player-row="${esc(p.id)}"><td class="sticky-check"><input type="checkbox" data-select-player="${esc(p.id)}" ${selected ? 'checked' : ''}></td>${playerColumns.map(([k, , t, c]) => `<td>${playerCell(p, k, t, c)}</td>`).join('')}<td class="player-image-cell">${playerFaceCell(p)}</td><td class="details-cell"><button class="details-button" data-player-details="${esc(p.id)}" type="button" title="Open player details" aria-label="Open player details"><span aria-hidden="true">✎</span></button></td></tr>`; }).join('')}</tbody></table></div>${pager(sorted.length, pages, start)}`;
+  els.content.innerHTML = searchToolbar(club ? `Search ${club.name} squad…` : 'Search players…', '<span class="grid-note">Paste tab-separated Excel rows directly · click a column title to sort.</span>') + `<div class="table-wrap player-grid"><table>${cols}<thead><tr><th class="sticky-check"><input type="checkbox" id="selectAllPlayers" ${selectedAll ? 'checked' : ''} aria-label="Select all filtered players"></th>${playerColumns.map(([key, label]) => `<th class="player-col-${esc(key)}">${playerSortHeader(key, label)}</th>`).join('')}<th class="player-image-head player-col-faceMode">${playerSortHeader('faceMode', 'Image')}</th><th class="details-head"><span class="sr-only">Details</span></th></tr></thead><tbody id="playerBody">${rows.map(p => { const selected = state.selected.has(String(p.id)); return `<tr class="${selected ? 'selected' : ''}" data-player-row="${esc(p.id)}"><td class="sticky-check"><input type="checkbox" data-select-player="${esc(p.id)}" ${selected ? 'checked' : ''}></td>${playerColumns.map(([k, , t, c]) => `<td class="player-col-${esc(k)}">${playerCell(p, k, t, c)}</td>`).join('')}<td class="player-image-cell player-col-faceMode">${playerFaceCell(p)}</td><td class="details-cell"><button class="details-button" data-player-details="${esc(p.id)}" type="button" title="Open player details" aria-label="Open player details"><span aria-hidden="true">✎</span></button></td></tr>`; }).join('')}</tbody></table></div>${pager(sorted.length, pages, start)}`;
   bindSearch();
   const selectAll = $('#selectAllPlayers');
   if (selectAll) selectAll.indeterminate = selectedSome && !selectedAll;
@@ -1839,6 +1839,7 @@ function openPlayerDrawer(id) {
       ${field('Age', 'age', p.age ?? '', 'number', 'min="14" max="60"')}
       ${field('Height (cm)', 'height_cm', p.height_cm ?? p.height ?? '', 'number', 'min="130" max="230"')}
       ${field('Weight (kg)', 'weight_kg', p.weight_kg ?? p.weight ?? '', 'number', 'min="35" max="180"')}
+      <div class="field drawer-overall"><label>OVR</label><input name="overall" type="number" min="1" max="99" value="${esc(p.overall ?? 60)}"></div>
       <div class="field"><label>Preferred foot</label><select name="foot"><option value="rechts" ${p.foot === 'rechts' || p.foot === 'Right' ? 'selected' : ''}>Right</option><option value="links" ${p.foot === 'links' || p.foot === 'Left' ? 'selected' : ''}>Left</option><option value="beidfüßig" ${p.foot === 'beidfüßig' || p.foot === 'Both' ? 'selected' : ''}>Both</option></select></div>
     </div>
 
@@ -1904,8 +1905,9 @@ function openPlayerDrawer(id) {
         p[key] = value; p.attributes[key] = value; input.value = value;
       }
     } else {
-      const numeric = ['age', 'height_cm', 'weight_kg'].includes(input.name);
+      const numeric = ['age', 'height_cm', 'weight_kg', 'overall'].includes(input.name);
       let value = numeric ? Number(input.value || 0) : input.value;
+      if (input.name === 'overall') { value = Math.max(1, Math.min(99, Math.round(value || 1))); input.value = value; }
       if (input.name === 'position') {
         value = normalizePositionCode(value);
         const extras = (p.extraPositions || p.secondaryPositions || []).map(normalizePositionCode).filter(pos => pos !== value && POSITIONS.includes(pos));
