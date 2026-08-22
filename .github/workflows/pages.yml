@@ -1,0 +1,56 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add club logos to the deployment artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/logos .pages-logo-zips
+          for i in $(seq -w 1 13); do
+            url="https://github.com/derabraham/kreisliga-logos/releases/download/v2/logos_part${i}.zip"
+            echo "Fetching logos_part${i}.zip"
+            curl -L --fail --retry 3 --retry-delay 2 "$url" -o ".pages-logo-zips/logos_part${i}.zip"
+            unzip -jo ".pages-logo-zips/logos_part${i}.zip" -d assets/logos >/dev/null
+          done
+          rm -rf .pages-logo-zips
+          printf '{"source":"derabraham/kreisliga-logos","release":"v2","generatedAt":"%s"}\n' "$(date -u +%FT%TZ)" > assets/logos/package-info.json
+          echo "Prepared $(find assets/logos -maxdepth 1 -type f -name '*.png' | wc -l) club logos for Pages."
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
