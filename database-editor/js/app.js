@@ -1,10 +1,13 @@
 import {
   emptyData, ensureIds, makeId, indexes, validate, ratingClass, esc,
-  POSITIONS, FEET, download, leagueNation
-} from './core.js?v=20260822-15';
-import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-15';
-import { listOfficial, loadOfficial, loadReferenceScaffold } from './official-loader.js?v=20260822-15';
-import { compatiblePlayerPacks } from './player-packs.js?v=20260822-15';
+  POSITIONS, FEET, download, leagueNation, additionalPlayerGenerationMode, shouldGenerateAdditionalPlayers, ADDITIONAL_PLAYER_AUTO_THRESHOLD
+} from './core.js?v=20260822-20';
+import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-20';
+import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-20';
+import { compatiblePlayerPacks } from './player-packs.js?v=20260822-20';
+import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-20';
+import { createContributionWorkspace, buildContributionChanges, validateContribution, exportContribution, importContribution, reviewContribution, applyReviewedChanges, trackedContributionHash, noteContributionMutation, contributionChangeSummary } from './contributions.js?v=20260822-20';
+
 
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
@@ -24,7 +27,16 @@ const state = {
   pendingNationFlag: null,
   flags: [],
   objectUrls: new Map(),
-  clubEditors: []
+  clubEditors: [],
+  contribution: null,
+  reviewPackage: null,
+  reviewModel: null,
+  reviewBaseDb: null,
+  reviewEntry: null,
+  reviewInspect: false,
+  dataRevision: 0,
+  indexCache: null,
+  searchTimer: null
 };
 
 const els = {
@@ -166,7 +178,10 @@ function disposeAllClubEditors() {
 function setDb(db) {
   disposeAllClubEditors();
   state.db = db;
+  state.dataRevision += 1;
+  state.indexCache = null;
   ensureIds(db.data, db.manifest.databaseId);
+  ensureDatabaseSettings(db.data, Number(db.data?.metadata?.startYear || String(db.manifest?.startDate||'2026').slice(0,4) || 2026));
   // Keep legacy saves compatible while presenting only the position set used by
   // the current game. Old RWB/LWB values are mapped to RB/LB in the editable copy.
   for (const player of db.data.players || []) {
@@ -197,7 +212,40 @@ function requireDb() {
 function dirty() {
   if (!state.db) return;
   state.db.dirty = true;
+  state.dataRevision += 1;
+  state.indexCache = null;
+  if (state.contribution) state.contribution._cachedRevision = null;
   els.dbMeta.textContent = `Unsaved changes · ${state.db.data.clubs.length.toLocaleString()} clubs · ${state.db.data.players.length.toLocaleString()} players`;
+}
+
+
+function markContributionEntity(collection, entityOrId, operation = 'touch') {
+  const w = state.contribution;
+  if (!w) return false;
+  const changed = noteContributionMutation(w, collection, entityOrId, operation);
+  if (changed) w._cachedRevision = null;
+  return changed;
+}
+function markPlayerAdded(player) { return markContributionEntity('players', player, 'add'); }
+function markPlayerTouched(player) { return markContributionEntity('players', player, 'touch'); }
+function markPlayerRemoved(playerOrId) { return markContributionEntity('players', playerOrId, 'remove'); }
+
+function dbIndexes(){
+  if(!state.db) return indexes(emptyData());
+  if(state.indexCache?.revision===state.dataRevision) return state.indexCache.value;
+  const value=indexes(state.db.data);
+  state.indexCache={revision:state.dataRevision,value};
+  return value;
+}
+
+function contributionChangesCached(){
+  const w=state.contribution;
+  if(!w||!state.db)return [];
+  if(w._cachedRevision===state.dataRevision&&Array.isArray(w._cachedChanges))return w._cachedChanges;
+  const changes=buildContributionChanges(w,state.db.data);
+  w._cachedRevision=state.dataRevision;
+  w._cachedChanges=changes;
+  return changes;
 }
 
 function modal(title, body, footer = '', extraClass = '') {
@@ -293,13 +341,16 @@ function renderBreadcrumbs() {
 }
 
 function viewName(view) {
-  return ({ overview: 'Overview', structure: 'Structure', players: 'Players', competitions: 'Competitions', validator: 'Validator' })[view] || 'Overview';
+  return ({ overview:'Overview',structure:'Structure',players:'Players',competitions:'Competitions',validator:'Validator',settings:'Database Settings',leagueContrib:'Contribute Leagues',playerContrib:'Contribute Players',reviewContrib:'Review Contributions' })[view] || 'Overview';
 }
 
 function render() {
   $$('#nav button').forEach(button => button.classList.toggle('active', button.dataset.view === state.view));
   els.main?.classList.toggle('hierarchy-mode', Boolean(state.db && state.view === 'structure'));
   removeSelectionBar();
+  if (state.view === 'leagueContrib') { renderContributionLanding('league'); renderBreadcrumbs(); return; }
+  if (state.view === 'playerContrib') { renderContributionLanding('player'); renderBreadcrumbs(); return; }
+  if (state.view === 'reviewContrib') { renderReviewContributions(); renderBreadcrumbs(); return; }
   if (!state.db) {
     els.title.textContent = 'Overview';
     els.subtitle.textContent = 'Load an official database, import a .kfmdb file or start from scratch.';
@@ -319,9 +370,12 @@ function render() {
   else if (state.view === 'players') renderPlayers();
   else if (state.view === 'competitions') renderCompetitions();
   else if (state.view === 'validator') renderValidator();
+  else if (state.view === 'settings') renderDatabaseSettings();
   else renderOverview();
   renderBreadcrumbs();
   bindGlobalActions();
+  renderContributionBanner();
+  renderReviewInspectBanner();
 }
 
 function bindGlobalActions() {
@@ -372,7 +426,11 @@ function pager(total, pages, start) {
 
 function bindSearch() {
   const input = $('#searchInput');
-  if (input) input.addEventListener('input', () => { state.search = input.value; state.page = 1; render(); });
+  if (input) input.addEventListener('input', () => {
+    state.search = input.value; state.page = 1;
+    if (state.searchTimer) clearTimeout(state.searchTimer);
+    state.searchTimer = setTimeout(() => { state.searchTimer = null; render(); }, 90);
+  });
   $$('[data-page]').forEach(button => button.addEventListener('click', () => { state.page += button.dataset.page === 'next' ? 1 : -1; render(); }));
 }
 
@@ -423,8 +481,8 @@ function nationForLeague(l) {
   return state.db.data.nations.find(n => String(n.name) === String(name)) || null;
 }
 function leaguesForNation(nation) { return state.db.data.leagues.filter(l => String(l.nationId || '') === String(nation.id) || leagueNation(l) === nation.name); }
-function clubsForLeague(league) { return state.db.data.clubs.filter(c => String(c.leagueId || '') === String(league.id) || (!c.leagueId && c.league === league.name)); }
-function playersForClub(club) { return state.db.data.players.filter(p => String(p.clubId || '') === String(club.id)); }
+function clubsForLeague(league) { return dbIndexes().clubsByLeague.get(String(league.id)) || []; }
+function playersForClub(club) { return dbIndexes().playersByClub.get(String(club.id)) || []; }
 
 function currentStructureStage() {
   const s = state.structure;
@@ -455,7 +513,7 @@ function renderConfederations() {
   for (const c of state.db.data.confederations) known.set(confederationCode(c), c);
   for (const n of state.db.data.nations) if (!known.has(String(n.confederation || 'FIFA').toUpperCase())) known.set(String(n.confederation || 'FIFA').toUpperCase(), { id: n.confederation || 'FIFA', ruleId: n.confederation || 'FIFA', name: n.confederation || 'FIFA' });
   const q = state.search.toLowerCase();
-  const ix = indexes(state.db.data);
+  const ix = dbIndexes();
   let list = [...known.values()].filter(c => !q || [c.name, c.displayName, c.ruleId].join(' ').toLowerCase().includes(q)).map(c => {
     const code = confederationCode(c);
     const nations = state.db.data.nations.filter(n => String(n.confederation || 'FIFA').toUpperCase() === code);
@@ -572,7 +630,7 @@ function renderLevelLeagues() {
   els.title.textContent = `League Level ${level}`;
   els.subtitle.textContent = `${nationDisplayName(nation)} · open a league to manage clubs.`;
   els.actions.innerHTML = '<button class="btn primary" id="addLeague" type="button">＋ Add league</button>';
-  const ix = indexes(state.db.data);
+  const ix = dbIndexes();
   const q = state.search.toLowerCase();
   let list = leaguesForNation(nation).filter(l => Number(l.level || 1) === level).filter(l => !q || [l.name, l.association, l.region].join(' ').toLowerCase().includes(q)).map(l => ({ ...l, _clubs: ix.clubsByLeague.get(String(l.id))?.length || 0 }));
   list = sortTableRows(sortScope, list, (l, key) => ({ league: l.name || '', clubs: l._clubs, association: l.association || '', region: l.region || '' })[key]);
@@ -606,7 +664,7 @@ function makeClubEditor(source, league) {
     id: editorId, clubId: editorId, databaseId: state.db.manifest.databaseId,
     name: '', shortName: '', rating: 50, stadium: '', mitglieder: 0, region: '',
     primarycolor: '#1e9ed2', secondarycolor: '#0b2235',
-    primaryColor: '#1e9ed2', secondaryColor: '#0b2235',
+    primaryColor: '#1e9ed2', secondaryColor: '#0b2235', additionalPlayerGeneration: 'auto',
     leagueId: league.id, league: league.name, level: Number(league.level || 1), databaseNation: leagueNation(league)
   };
   return {
@@ -673,6 +731,8 @@ function clubEditRowHtml(editor, league) {
   const players = editor.isNew ? 0 : playersForClub(d).length;
   const primary = String(d.primarycolor || d.primaryColor || '#1e9ed2');
   const secondary = String(d.secondarycolor || d.secondaryColor || '#0b2235');
+  const generationMode = additionalPlayerGenerationMode(d);
+  const generationLabel = generationMode==='auto' ? (players>=ADDITIONAL_PLAYER_AUTO_THRESHOLD ? `Auto → no extras (${players})` : `Auto → fill (${players}/${ADDITIONAL_PLAYER_AUTO_THRESHOLD})`) : generationMode==='off' ? 'Database players only' : 'Always fill squad';
   return `<tr class="club-edit-row" data-club-editor-row="${esc(editor.id)}">
     <td class="select-col"><span class="club-edit-dot" title="Unsaved / editing">●</span></td>
     <td class="club-logo-col"><div class="club-grid-logo-editor">${clubRowLogoHtml(editor)}<button class="grid-logo-upload" data-club-logo-upload type="button" title="Upload team logo">＋</button></div></td>
@@ -680,6 +740,7 @@ function clubEditRowHtml(editor, league) {
     <td><input class="club-grid-input" data-club-field="shortName" value="${esc(d.shortName || '')}" placeholder="Short"></td>
     <td><input class="club-grid-input numeric" data-club-field="rating" type="number" min="0" max="100" step="0.01" value="${esc(d.rating ?? 50)}"></td>
     <td class="club-readonly-number">${players}</td>
+    <td><select class="club-grid-select" data-club-field="additionalPlayerGeneration" title="${esc(generationLabel)}"><option value="auto" ${generationMode==='auto'?'selected':''}>${esc(generationLabel)}</option><option value="always" ${generationMode==='always'?'selected':''}>Always fill squad</option><option value="off" ${generationMode==='off'?'selected':''}>Database players only</option></select></td>
     <td><input class="club-grid-input" data-club-field="stadium" value="${esc(d.stadium || '')}" placeholder="Stadium"></td>
     <td><input class="club-grid-input numeric" data-club-field="mitglieder" type="number" min="0" step="1" value="${esc(d.mitglieder ?? 0)}"></td>
     <td><input class="club-grid-input" data-club-field="region" value="${esc(d.region || '')}" placeholder="Region"></td>
@@ -711,6 +772,7 @@ function saveClubRowEdit(editorId, league) {
   d.name = String(d.name).trim(); d.shortName = String(d.shortName || '').trim();
   d.stadium = String(d.stadium || '').trim(); d.region = String(d.region || '').trim();
   d.rating = Number(d.rating || 0); d.mitglieder = Number(d.mitglieder || 0);
+  d.additionalPlayerGeneration = ['auto','always','off'].includes(String(d.additionalPlayerGeneration||'')) ? String(d.additionalPlayerGeneration) : 'auto';
   d.leagueId = league.id; d.league = league.name; d.level = Number(league.level || 1); d.databaseNation = leagueNation(league);
   d.primaryColor = d.primarycolor || d.primaryColor || '#1e9ed2';
   d.secondaryColor = d.secondarycolor || d.secondaryColor || '#0b2235';
@@ -751,14 +813,14 @@ function renderLeagueClubs() {
   els.title.textContent = league.name;
   els.subtitle.textContent = 'Select clubs for bulk actions, edit clubs directly in the table, or open one to manage its squad.';
   els.actions.innerHTML = `<button class="btn" id="editLeagueTop" type="button">Edit league</button><button class="btn" id="add10Clubs" type="button">＋ 10 clubs</button><button class="btn primary" id="addClub" type="button">＋ Add club</button>`;
-  const ix = indexes(state.db.data);
+  const ix = dbIndexes();
   const q = state.search.toLowerCase();
   const editingSourceIds = new Set(editors.map(editor => String(editor.sourceId || '')).filter(Boolean));
   let list = clubsForLeague(league).filter(c => !q || [c.name, c.shortName, c.region, c.stadium].join(' ').toLowerCase().includes(q)).map(c => ({ ...c, _players: ix.playersByClub.get(String(c.id))?.length || 0 }));
   if (editingSourceIds.size) list = list.filter(c => !editingSourceIds.has(String(c.id)));
   list = sortTableRows(sortScope, list, (c, key) => ({
     club: c.name || '', shortName: c.shortName || '', rating: Number(c.rating ?? 50), players: c._players,
-    stadium: c.stadium || '', members: Number(c.mitglieder ?? 0), region: c.region || '',
+    generation: additionalPlayerGenerationMode(c), stadium: c.stadium || '', members: Number(c.mitglieder ?? 0), region: c.region || '',
     primary: c.primarycolor || c.primaryColor || '', secondary: c.secondarycolor || c.secondaryColor || ''
   })[key]);
   const { rows, pages, start } = paginate(list);
@@ -774,6 +836,7 @@ function renderLeagueClubs() {
       <td>${esc(c.shortName || '—')}</td>
       <td><span class="rating ${ratingClass(c.rating)}">${esc(Number(c.rating ?? 50).toFixed(1))}</span></td>
       <td>${c._players}</td>
+      <td><span class="pill ${shouldGenerateAdditionalPlayers(c,c._players)?'':'blue'}" title="Auto stops additional generation once ${ADDITIONAL_PLAYER_AUTO_THRESHOLD} database players exist.">${esc(additionalPlayerGenerationMode(c)==='auto' ? (c._players>=ADDITIONAL_PLAYER_AUTO_THRESHOLD?'Auto · no extras':'Auto · fill') : additionalPlayerGenerationMode(c)==='off'?'DB only':'Always fill')}</span></td>
       <td class="truncate-cell" title="${esc(c.stadium || '')}">${esc(c.stadium || '—')}</td>
       <td>${Number(c.mitglieder ?? 0).toLocaleString()}</td>
       <td class="truncate-cell" title="${esc(c.region || '')}">${esc(c.region || '—')}</td>
@@ -784,11 +847,11 @@ function renderLeagueClubs() {
   }).join('');
   const editRows = editors.map(editor => clubEditRowHtml(editor, league)).join('');
   const body = editRows + normalRows;
-  const clubCols = `<colgroup><col class="club-col-select"><col class="club-col-logo"><col class="club-col-name"><col class="club-col-short"><col class="club-col-rating"><col class="club-col-players"><col class="club-col-stadium"><col class="club-col-members"><col class="club-col-region"><col class="club-col-color"><col class="club-col-color"><col class="club-col-actions"></colgroup>`;
+  const clubCols = `<colgroup><col class="club-col-select"><col class="club-col-logo"><col class="club-col-name"><col class="club-col-short"><col class="club-col-rating"><col class="club-col-players"><col class="club-col-generation"><col class="club-col-stadium"><col class="club-col-members"><col class="club-col-region"><col class="club-col-color"><col class="club-col-color"><col class="club-col-actions"></colgroup>`;
   const editNote = editors.length
     ? `<span class="grid-note club-draft-note"><b>${editors.length}</b> unsaved club row${editors.length === 1 ? '' : 's'} · each row stays editable until you save or cancel it.</span>`
     : '<span class="grid-note">Add or edit clubs directly in the table.</span>';
-  els.content.innerHTML = searchToolbar('Search club, stadium or region…', editNote) + `<div class="table-wrap club-grid"><table class="directory-table">${clubCols}<thead><tr><th class="select-col"><input type="checkbox" id="selectAllEntities" ${allSelected ? 'checked' : ''} aria-label="Select all clubs"></th><th>Logo</th><th>${tableSortHeader(sortScope, 'club', 'Club')}</th><th>${tableSortHeader(sortScope, 'shortName', 'Short')}</th><th>${tableSortHeader(sortScope, 'rating', 'Rating')}</th><th>${tableSortHeader(sortScope, 'players', 'Players')}</th><th>${tableSortHeader(sortScope, 'stadium', 'Stadium')}</th><th>${tableSortHeader(sortScope, 'members', 'Members')}</th><th>${tableSortHeader(sortScope, 'region', 'Region')}</th><th>${tableSortHeader(sortScope, 'primary', 'Primary')}</th><th>${tableSortHeader(sortScope, 'secondary', 'Secondary')}</th><th>Actions</th></tr></thead><tbody>${body || '<tr><td colspan="12"><div class="table-empty">No clubs yet. Use “Add club” or “10 clubs” to create editable rows.</div></td></tr>'}</tbody></table></div>${pager(list.length, pages, start)}`;
+  els.content.innerHTML = searchToolbar('Search club, stadium or region…', editNote) + `<div class="table-wrap club-grid"><table class="directory-table">${clubCols}<thead><tr><th class="select-col"><input type="checkbox" id="selectAllEntities" ${allSelected ? 'checked' : ''} aria-label="Select all clubs"></th><th>Logo</th><th>${tableSortHeader(sortScope, 'club', 'Club')}</th><th>${tableSortHeader(sortScope, 'shortName', 'Short')}</th><th>${tableSortHeader(sortScope, 'rating', 'Rating')}</th><th>${tableSortHeader(sortScope, 'players', 'Players')}</th><th>${tableSortHeader(sortScope, 'generation', 'Additional players')}</th><th>${tableSortHeader(sortScope, 'stadium', 'Stadium')}</th><th>${tableSortHeader(sortScope, 'members', 'Members')}</th><th>${tableSortHeader(sortScope, 'region', 'Region')}</th><th>${tableSortHeader(sortScope, 'primary', 'Primary')}</th><th>${tableSortHeader(sortScope, 'secondary', 'Secondary')}</th><th>Actions</th></tr></thead><tbody>${body || '<tr><td colspan="13"><div class="table-empty">No clubs yet. Use “Add club” or “10 clubs” to create editable rows.</div></td></tr>'}</tbody></table></div>${pager(list.length, pages, start)}`;
   bindSearch();
   bindTableSort(sortScope);
   bindEntitySelection(list, 'club');
@@ -1103,8 +1166,10 @@ function nationDisplayName(value) {
 }
 
 function nationByInternalName(value) {
-  return state.db?.data?.nations?.find(n => String(n.name) === String(value)) || null;
+  if (!state.db) return null;
+  return dbIndexes().nationByName.get(String(value)) || null;
 }
+
 
 function nationOptions(current = '') {
   const rows = [...(state.db?.data?.nations || [])].sort((a, b) => nationDisplayName(a).localeCompare(nationDisplayName(b), 'en', { sensitivity: 'base' }));
@@ -1272,7 +1337,7 @@ const ATTR_LABELS = {
 function playerSortValue(player, key) {
   if (key === 'nation') return nationDisplayName(nationByInternalName(player.nation) || player.nation);
   if (key === 'clubId') {
-    const club = state.db.data.clubs.find(c => String(c.id) === String(player.clubId));
+    const club = dbIndexes().clubById.get(String(player.clubId));
     return club?.name || player.clubName || '';
   }
   if (key === 'extraPositions') return (player.extraPositions || player.secondaryPositions || []).join(',');
@@ -1299,7 +1364,7 @@ function playerSearchList() {
   return state.db.data.players.filter(player => {
     if (!q) return true;
     const nation = nationByInternalName(player.nation);
-    const club = state.db.data.clubs.find(c => String(c.id) === String(player.clubId));
+    const club = dbIndexes().clubById.get(String(player.clubId));
     return [
       player.firstName, player.lastName, player.name,
       player.nation, nationDisplayName(nation || player.nation),
@@ -1309,7 +1374,7 @@ function playerSearchList() {
 }
 
 function newPlayer(clubId = '') {
-  const club = state.db.data.clubs.find(c => String(c.id) === String(clubId));
+  const club = dbIndexes().clubById.get(String(clubId));
   const id = makeId('PLAYER');
   return { id, playerId: id, firstName: '', lastName: '', name: '', nation: state.db.data.nations[0]?.name || '', position: 'CM', extraPositions: [], secondaryPositions: [], overall: 60, talent: 3, age: 18, height_cm: 180, weight_kg: 75, foot: 'rechts', clubId: clubId || '', clubName: club?.name || '', faceMode: 'placeholder', usePlaceholderFace: true, attributes: {}, traits: [], databaseId: state.db.manifest.databaseId };
 }
@@ -1343,7 +1408,7 @@ function playerCell(p, key, type, cls) {
   if (type === 'positions') return `<div class="grid-multi-cell"><input class="cell-input ${cls}" data-pid="${esc(p.id)}" data-pkey="${key}" value="${esc(v)}" placeholder="RB, LB"><button class="grid-picker-btn" data-open-positions="${esc(p.id)}" type="button" title="Choose additional positions">＋</button></div>`;
   if (type === 'foot') return `<select class="cell-select ${cls}" data-pid="${esc(p.id)}" data-pkey="${key}"><option value="rechts" ${v === 'rechts' || v === 'Right' ? 'selected' : ''}>Right</option><option value="links" ${v === 'links' || v === 'Left' ? 'selected' : ''}>Left</option><option value="beidfüßig" ${v === 'beidfüßig' || v === 'Both' ? 'selected' : ''}>Both</option></select>`;
   if (type === 'club') {
-    const c = state.db.data.clubs.find(x => String(x.id) === String(v));
+    const c = dbIndexes().clubById.get(String(v));
     return `<div class="grid-club-cell">${c ? clubLogoHtml(c, true) : '<span class="club-logo-box compact empty">—</span>'}<input class="cell-input ${cls}" data-pid="${esc(p.id)}" data-pkey="${key}" data-club-query value="${esc(c?.name || p.clubName || '')}" autocomplete="off" title="${esc(c?.name || p.clubName || '')}"></div>`;
   }
   if (type === 'potential') return `<input class="cell-input ${cls}" type="number" min="0.5" max="5" step="0.5" data-pid="${esc(p.id)}" data-pkey="${key}" value="${esc(v)}">`;
@@ -1377,8 +1442,8 @@ function renderPlayerGrid(list, options) {
   bindSearch();
   const selectAll = $('#selectAllPlayers');
   if (selectAll) selectAll.indeterminate = selectedSome && !selectedAll;
-  $('#addPlayer')?.addEventListener('click', () => { state.db.data.players.unshift(newPlayer(club?.id || '')); dirty(); render(); });
-  $('#add20')?.addEventListener('click', () => { for (let i = 0; i < 20; i++) state.db.data.players.unshift(newPlayer(club?.id || '')); dirty(); render(); });
+  $('#addPlayer')?.addEventListener('click', () => { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); markPlayerAdded(p); dirty(); render(); });
+  $('#add20')?.addEventListener('click', () => { for (let i = 0; i < 20; i++) { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); markPlayerAdded(p); } dirty(); render(); });
   $('#importPlayers')?.addEventListener('click', () => { $('#jsonInput').dataset.mode = 'players'; $('#jsonInput').click(); });
   $$('[data-player-sort]').forEach(button => button.addEventListener('click', () => {
     const key = button.dataset.playerSort;
@@ -1400,13 +1465,13 @@ function renderPlayerGrid(list, options) {
       return;
     }
     const id = button.dataset.playerFaceGenerated || button.dataset.playerFacePlaceholder;
-    const p = state.db.data.players.find(x => String(x.id) === String(id));
+    const p = dbIndexes().playerById.get(String(id));
     if (!p) return;
     setPlayerFaceMode(p, button.dataset.playerFaceGenerated ? 'generated' : 'placeholder');
     render();
   });
   $$('[data-pid]').forEach(input => input.addEventListener('change', () => {
-    const p = state.db.data.players.find(x => String(x.id) === String(input.dataset.pid));
+    const p = dbIndexes().playerById.get(String(input.dataset.pid));
     if (!p) return;
     let v = input.value;
     const key = input.dataset.pkey;
@@ -1432,14 +1497,14 @@ function renderPlayerGrid(list, options) {
       input.title = nationDisplayName(nation || v);
     }
     if (key === 'clubId') {
-      const found = state.db.data.clubs.find(c => String(c.name || '').toLowerCase() === String(v).trim().toLowerCase() || String(c.id) === String(v).trim());
+      const raw=String(v).trim();const ix=dbIndexes();const found=ix.clubById.get(raw)||ix.clubByLowerName.get(raw.toLowerCase());
       v = found?.id || ''; p.clubName = found?.name || '';
       const holder = input.closest('.grid-club-cell')?.querySelector('.club-logo-box');
       if (holder) holder.outerHTML = found ? clubLogoHtml(found, true) : '<span class="club-logo-box compact empty">—</span>';
       input.value = found?.name || '';
       input.title = found?.name || '';
     }
-    p[key] = v; p.name = [p.firstName, p.lastName].filter(Boolean).join(' '); dirty();
+    p[key] = v; p.name = [p.firstName, p.lastName].filter(Boolean).join(' '); markPlayerTouched(p); dirty();
   }));
   $$('[data-select-player]').forEach(check => {
     check.addEventListener('click', event => event.stopPropagation());
@@ -1478,7 +1543,7 @@ function showClubSuggestions(input) {
   const q = input.value.trim().toLowerCase();
   if (!q) return;
   const hits = [];
-  for (const c of state.db.data.clubs) { if (String(c.name || '').toLowerCase().includes(q) || String(c.id || '').toLowerCase().includes(q)) { hits.push(c); if (hits.length >= 12) break; } }
+  for (const item of dbIndexes().clubSearch) { if (item.key.includes(q)) { hits.push(item.club); if (hits.length >= 12) break; } }
   if (!hits.length) return;
   const r = input.getBoundingClientRect();
   const box = document.createElement('div');
@@ -1490,11 +1555,11 @@ function showClubSuggestions(input) {
   document.body.append(box);
   $$('[data-club-pick]', box).forEach(button => button.addEventListener('mousedown', event => {
     event.preventDefault();
-    const c = state.db.data.clubs.find(x => String(x.id) === String(button.dataset.clubPick));
+    const c = dbIndexes().clubById.get(String(button.dataset.clubPick));
     if (!c) return;
     input.value = c.name;
-    const p = state.db.data.players.find(x => String(x.id) === String(input.dataset.pid));
-    if (p) { p.clubId = c.id; p.clubName = c.name; dirty(); }
+    const p = dbIndexes().playerById.get(String(input.dataset.pid));
+    if (p) { p.clubId = c.id; p.clubName = c.name; markPlayerTouched(p); dirty(); }
     const holder = input.closest('.grid-club-cell')?.querySelector('.club-logo-box');
     if (holder) holder.outerHTML = clubLogoHtml(c, true);
     box.remove();
@@ -1511,7 +1576,7 @@ function bindPositionPickers() {
 
 function showPositionPicker(button) {
   $('.position-popover')?.remove();
-  const p = state.db.data.players.find(x => String(x.id) === String(button.dataset.openPositions));
+  const p = dbIndexes().playerById.get(String(button.dataset.openPositions));
   if (!p) return;
   const main = normalizePositionCode(p.position || 'CM');
   const selected = new Set((p.extraPositions || p.secondaryPositions || []).map(x => String(x).toUpperCase()).filter(x => POSITIONS.includes(x) && x !== main));
@@ -1541,7 +1606,7 @@ function showPositionPicker(button) {
     p.extraPositions = [...values]; p.secondaryPositions = [...values];
     const input = button.closest('.grid-multi-cell')?.querySelector('[data-pkey="extraPositions"]');
     if (input) input.value = values.join(', ');
-    dirty();
+    markPlayerTouched(p); dirty();
   };
   $$('input[type="checkbox"]', box).forEach(input => input.addEventListener('change', sync));
   $('[data-clear-positions]', box).addEventListener('click', () => { $$('input[type="checkbox"]', box).forEach(x => { if (!x.disabled) x.checked = false; }); sync(); });
@@ -1575,6 +1640,7 @@ function handlePlayerPaste(event) {
     if (!p) {
       p = newPlayer(clubId);
       state.db.data.players.push(p);
+      markPlayerAdded(p);
       visibleIds.push(p.id);
     }
     for (let c = 0; c < matrix[r].length && colStart + c < playerColumns.length; c++) {
@@ -1594,12 +1660,13 @@ function handlePlayerPaste(event) {
         if (foot === 'right') v = 'rechts'; else if (foot === 'left') v = 'links'; else if (foot === 'both' || foot === 'both feet') v = 'beidfüßig';
       }
       if (key === 'clubId') {
-        const club = state.db.data.clubs.find(x => String(x.name || '').toLowerCase() === String(v).toLowerCase() || String(x.id) === String(v));
+        const raw=String(v).trim();const ix=dbIndexes();const club=ix.clubById.get(raw)||ix.clubByLowerName.get(raw.toLowerCase());
         v = club?.id || ''; p.clubName = club?.name || '';
       }
       p[key] = v;
     }
     p.name = [p.firstName, p.lastName].filter(Boolean).join(' ');
+    markPlayerTouched(p);
   }
   dirty(); toast(`${matrix.length} pasted row${matrix.length === 1 ? '' : 's'}.`); render();
 }
@@ -1769,6 +1836,7 @@ function duplicateSelected(type) {
     const copies = state.db.data.players.filter(p => ids.has(String(p.id))).map(p => clonePlayerTo(p, p.clubId));
     for (const x of copies) { x.lastName = `${x.lastName || ''} Copy`.trim(); x.name = [x.firstName, x.lastName].filter(Boolean).join(' '); }
     state.db.data.players.push(...copies);
+    for (const p of copies) markPlayerAdded(p);
   } else if (type === 'club') {
     const copies = [];
     for (const c of state.db.data.clubs.filter(c => ids.has(String(c.id)))) {
@@ -1786,7 +1854,7 @@ function deleteSelected(type) {
   const count = state.selected.size;
   if (!count || !confirm(`Delete ${count} selected ${type}${count === 1 ? '' : 's'}?`)) return;
   const ids = new Set([...state.selected].map(String));
-  if (type === 'player') state.db.data.players = state.db.data.players.filter(p => !ids.has(String(p.id)));
+  if (type === 'player') { for (const p of state.db.data.players) if (ids.has(String(p.id))) markPlayerRemoved(p); state.db.data.players = state.db.data.players.filter(p => !ids.has(String(p.id))); }
   else if (type === 'club') {
     state.db.data.clubs = state.db.data.clubs.filter(c => !ids.has(String(c.id)));
     for (const p of state.db.data.players) if (ids.has(String(p.clubId))) { p.clubId = ''; p.clubName = ''; }
@@ -1871,7 +1939,7 @@ function openPlayerDrawer(id) {
     $$('[data-remove-trait]', holder).forEach(button => button.addEventListener('click', () => {
       selectedTraits.delete(button.dataset.removeTrait);
       p.traits = [...selectedTraits];
-      dirty(); renderTraits(); syncTraitPicker();
+      markPlayerTouched(p); dirty(); renderTraits(); syncTraitPicker();
     }));
   };
   const syncTraitPicker = () => {
@@ -1892,7 +1960,7 @@ function openPlayerDrawer(id) {
   $$('[data-add-trait]', drawer).forEach(button => button.addEventListener('click', () => {
     selectedTraits.add(button.dataset.addTrait);
     p.traits = [...selectedTraits];
-    dirty(); renderTraits(); syncTraitPicker();
+    markPlayerTouched(p); dirty(); renderTraits(); syncTraitPicker();
   }));
 
   $$('input[name], select[name]', drawer).forEach(input => input.addEventListener('change', () => {
@@ -1923,7 +1991,7 @@ function openPlayerDrawer(id) {
       const title = $('#drawerPlayerName', drawer);
       if (title) title.textContent = p.name || 'Unnamed player';
     }
-    dirty();
+    markPlayerTouched(p); dirty();
   }));
 
   $('#uploadFace', drawer).addEventListener('click', () => { state.imageTarget = { type: 'player', id: p.id }; $('#imageInput').click(); });
@@ -1957,21 +2025,245 @@ function renderValidator() {
   $('#rerun').addEventListener('click', render);
 }
 
+
+function renderDatabaseSettings(){
+  els.title.textContent='Database Settings';els.subtitle.textContent='Era, finance and globalization settings stored in data/metadata.json and shared with the mobile editor.';
+  const settings=ensureDatabaseSettings(state.db.data);const inherited=(key)=>settings[key]==null?'':settings[key];
+  const row=(label,key,value,min,max,step,help)=>`<div class="setting-row"><div><b>${esc(label)}</b><span class="setting-note">${esc(help)}</span></div><input class="inline-input" type="number" data-db-setting="${esc(key)}" value="${esc(value)}" min="${min}" max="${max}" step="${step}"></div>`;
+  els.actions.innerHTML='<button class="btn primary" id="saveDbSettings" type="button">Apply settings</button>';
+  els.content.innerHTML=`<div class="settings-grid"><div class="card settings-card"><h3>Era & economy</h3><p>Defaults reproduce the modern database. Inflation is applied by the game over career years; it does not rewrite stored player/club data.</p>${row('Era year','eraYear',settings.eraYear,1850,2200,1,'Reference year of this database.')}${row('Finance scale','financeScale',settings.financeScale,0.01,4,0.01,'1.00 = modern baseline; 0.10 ≈ 10% of modern monetary values.')}${row('Annual inflation','annualInflation',settings.annualInflation,-0.05,0.15,0.001,'0.04 = 4% per career year. Deterministic and capped in-game.')}${row('Attendance scale','attendanceScale',settings.attendanceScale,0.1,3,0.05,'Scales matchday attendance/revenue capacity without changing stadium records.')}${row('Transfer market activity','transferMarketActivity',settings.transferMarketActivity,0.1,2,0.05,'Global intensity for AI market movement.')}</div><div class="card settings-card"><h3>Player movement</h3><p>These affect future simulation decisions and generated players only. Existing historical players are never rewritten.</p>${row('Globalization factor','globalizationFactor',settings.globalizationFactor,0,2,0.05,'1.00 = modern baseline; lower values favor domestic movement.')}${row('Youth internationalization','youthInternationalization',settings.youthInternationalization,0,2,0.05,'Controls foreign diversity for future youth/newgens.')}</div><div class="card settings-card"><h3>Advanced finance overrides</h3><p>Leave blank to inherit Finance Scale.</p>${row('Transfer value scale','transferValueScale',inherited('transferValueScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Wage scale','wageScale',inherited('wageScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Club revenue scale','clubRevenueScale',inherited('clubRevenueScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Prize money scale','prizeMoneyScale',inherited('prizeMoneyScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}</div></div>`;
+  $('#saveDbSettings').onclick=()=>{const raw={...settings};$$('[data-db-setting]').forEach(input=>{raw[input.dataset.dbSetting]=input.value===''?null:Number(input.value)});state.db.data.metadata.databaseSettings=normalizeDatabaseSettings(raw,state.db.data.metadata.startYear);dirty();toast('Database settings updated.');renderDatabaseSettings()};
+}
+
+async function chooseOfficialForContribution(type){
+  const list=await listOfficial();modal(type==='league'?'Start League Contribution':'Start Player Contribution',`<div class="source-options">${list.map(x=>`<div class="source-card"><div><strong>${esc(x.label)}</strong><span>${esc(x.startDate||'')} · Official read-only base</span></div><button class="btn primary" data-contrib-season="${esc(x.id)}" type="button">Use official base</button></div>`).join('')}</div>`);
+  $$('[data-contrib-season]',els.modal).forEach(btn=>btn.onclick=async()=>{const entry=list.find(x=>String(x.id)===String(btn.dataset.contribSeason));btn.disabled=true;btn.textContent='Loading…';try{const db=await loadOfficialContributionBase(entry,type);setDb(db);state.contribution=createContributionWorkspace(db,type);state.contribution._cachedRevision=state.dataRevision;state.contribution._cachedChanges=[];closeModal();state.view=type==='league'?'structure':'players';resetTransient();render();toast(`${entry.label} opened in isolated contribution workspace.`)}catch(error){btn.disabled=false;btn.textContent='Use official base';toast(error.message,'error')}});
+}
+function renderContributionLanding(type){
+  const isLeague=type==='league';els.title.textContent=isLeague?'Contribute Leagues':'Contribute Players';els.subtitle.textContent='Community contribution mode always starts from an official, read-only database snapshot.';els.actions.innerHTML=`<button class="btn primary" id="startContribution" type="button">Choose official database</button>`;
+  els.content.innerHTML=`<div class="card contrib-hero"><div><h2>${isLeague?'Add missing leagues and clubs':'Create real player lists'}</h2><p class="contrib-muted">The official database is never overwritten. Edits live in a temporary workspace and export as a small .kfmcontrib patch for manual sharing and later review.</p></div><div class="contrib-steps"><div class="contrib-step"><b>1 · Official base</b><span>Select season</span></div><div class="contrib-step"><b>2 · Edit</b><span>Reuse ${isLeague?'Structure + Club Batch Editor':'Player Grid + TSV/Excel paste'}</span></div><div class="contrib-step"><b>3 · Validate</b><span>IDs, references, plausibility</span></div><div class="contrib-step"><b>4 · Export</b><span>Small .kfmcontrib file</span></div></div></div>`;$('#startContribution').onclick=()=>chooseOfficialForContribution(type);
+}
+function showContributionCoverage(){
+  if(!state.contribution||state.contribution.type!=="league"||!state.db)return;
+  const data=state.db.data;const leagues=data.leagues||[],clubs=data.clubs||[];
+  const clubCountByLeague=new Map();for(const club of clubs){const keys=[club.leagueId,club.league].filter(Boolean).map(String);for(const key of keys)clubCountByLeague.set(key,(clubCountByLeague.get(key)||0)+1)}
+  const rows=(data.nations||[]).map(nation=>{const name=nationDisplayName(nation);const nationLeagues=leagues.filter(l=>{const ln=leagueNation(l);return String(l.nationId||'')===String(nation.id)||String(ln)===String(nation.name)||String(ln)===String(name)});const levels=[...new Set(nationLeagues.map(l=>Number(l.level)).filter(Number.isFinite))].sort((a,b)=>a-b);const max=levels.length?Math.max(...levels):0;const missing=[];if(max)for(let i=1;i<=max;i++)if(!levels.includes(i))missing.push(i);const empty=nationLeagues.filter(l=>!clubCountByLeague.get(String(l.id))&&!clubCountByLeague.get(String(l.name))).length;const sparse=nationLeagues.filter(l=>{const c=clubCountByLeague.get(String(l.id))||clubCountByLeague.get(String(l.name))||0;return c>0&&c<8}).length;return{id:String(nation.id||''),name,leagueCount:nationLeagues.length,levels,max,missing,empty,sparse}}).sort((a,b)=>a.name.localeCompare(b.name));
+  const noLeagues=rows.filter(r=>!r.leagueCount).length,missingLower=rows.filter(r=>r.missing.length||r.max===1).length,empty=rows.reduce((a,r)=>a+r.empty,0),sparse=rows.reduce((a,r)=>a+r.sparse,0);
+  modal('League coverage',`<div class="review-summary"><div class="review-stat"><strong>${noLeagues}</strong><span>Countries without leagues</span></div><div class="review-stat"><strong>${missingLower}</strong><span>Missing lower divisions / gaps</span></div><div class="review-stat"><strong>${empty}</strong><span>Empty leagues</span></div><div class="review-stat"><strong>${sparse}</strong><span>Leagues with &lt; 8 clubs</span></div></div><div class="coverage-grid">${rows.map(r=>`<div class="coverage-card"><strong>${esc(r.name)}</strong><span class="contrib-muted">${r.leagueCount?`${r.leagueCount} league(s) · Levels ${r.levels.join(', ')||'—'}`:'No leagues'}</span><div class="coverage-tags">${!r.leagueCount?'<span class="coverage-tag">No leagues</span>':''}${r.max===1?'<span class="coverage-tag">Only Level 1</span>':''}${r.missing.length?`<span class="coverage-tag">Missing L${r.missing.join(', L')}</span>`:''}${r.empty?`<span class="coverage-tag">${r.empty} empty</span>`:''}${r.sparse?`<span class="coverage-tag">${r.sparse} sparse</span>`:''}</div><button class="btn small" data-coverage-nation="${esc(r.id)}" type="button">Open nation</button></div>`).join('')}</div>`,'<button class="btn" data-close2 type="button">Close</button>','wide');$('[data-close2]',els.modal).onclick=closeModal;$$('[data-coverage-nation]',els.modal).forEach(btn=>btn.onclick=()=>{const id=btn.dataset.coverageNation;closeModal();structureGo('nationId',id)});
+}
+
+function openContributionMetadata(){
+  const w=state.contribution;if(!w)return;const m=w.metadata||{};modal('Contribution metadata',`<div class="form-grid">${field('Contributor display name','contributorName',m.contributorName||'')}${field('Discord name (optional)','discordName',m.discordName||'')}<div class="field full"><label>Sources (one URL per line)</label><textarea name="sources">${esc((m.sources||[]).join('\n'))}</textarea></div><div class="field full"><label>Notes</label><textarea name="notes">${esc(m.notes||'')}</textarea></div></div>`,'<button class="btn" data-cancel type="button">Cancel</button><button class="btn primary" id="saveContribMeta" type="button">Save</button>');$('[data-cancel]',els.modal).onclick=closeModal;$('#saveContribMeta').onclick=()=>{const root=$('.modal',els.modal);w.metadata={contributorName:$('[name=contributorName]',root).value,discordName:$('[name=discordName]',root).value,sources:$('[name=sources]',root).value.split(/\n+/).map(x=>x.trim()).filter(Boolean),notes:$('[name=notes]',root).value};closeModal();toast('Contribution metadata saved.')};
+}
+function contributionEntityLabel(change){
+  const entity=change?.after||change?.before||{};
+  const fullName=[entity?.firstName,entity?.lastName].filter(Boolean).join(' ').trim();
+  return String(entity?.name||fullName||entity?.displayName||entity?.Region||entity?.region||entity?.id||change?.entityId||'Unknown entity');
+}
+function contributionPreview(){
+  const w=state.contribution;if(!w)return;
+  const v=validateContribution(w,state.db.data);
+  const changes=v.changes;
+  w._cachedChanges=changes;w._cachedRevision=state.dataRevision;
+  const s=contributionChangeSummary(w,state.db.data,changes);
+  const zeroNote=!changes.length?'<div class="card contribution-recovery-note"><b>No contribution changes detected</b><p>KFM will not export an empty contribution. If you just created a player, close this preview and add/edit the player again; the fixed tracker records new player IDs explicitly as well as by snapshot diff.</p></div>':'';
+  modal('Contribution preview',`${zeroNote}<div class="review-summary"><div class="review-stat"><strong>${s.total}</strong><span>Changes</span></div><div class="review-stat"><strong>${s.added}</strong><span>Added</span></div><div class="review-stat"><strong>${s.updated}</strong><span>Updated</span></div><div class="review-stat"><strong>${s.removed}</strong><span>Removed</span></div><div class="review-stat"><strong>${v.errors}</strong><span>Errors</span></div><div class="review-stat"><strong>${v.warnings}</strong><span>Warnings</span></div></div><div class="card contrib-diagnostic"><small>Tracked base rows: ${s.baseCount.toLocaleString()} · Current rows: ${s.currentCount.toLocaleString()}</small></div><div class="card">${changes.slice(0,200).map(c=>`<div class="issue ${c.operation==='add'?'ok':'warning'}"><b>${esc(c.operation.toUpperCase())}</b><span>${esc(c.entityType)}</span><span>${esc(contributionEntityLabel(c))}</span><span>${c.recoveredFromJournal?'tracker recovery':''}</span></div>`).join('')||'<div class="empty-state validator-empty">No changes yet.</div>'}</div>`);
+}
+
+async function doContributionExport(){const w=state.contribution;if(!w)return;const v=validateContribution(w,state.db.data);if(!v.changes.length){contributionPreview();toast('Nothing was exported because this contribution contains 0 changes.','error');return}if(v.errors&&!confirm(`Validator reports ${v.errors} error(s). Export anyway?`))return;try{const out=await exportContribution(w,state.db);if(!out.changes.length)throw new Error('Safety check failed: export produced 0 changes.');const base=(state.db.manifest.displayName||'contribution').replace(/[^a-z0-9._-]+/gi,'-');download(out.blob,`${base}-${w.type}.kfmcontrib`);toast(`Contribution exported with ${out.changes.length} change(s).`)}catch(error){toast(`Contribution export failed: ${error.message}`,'error')}}
+function renderContributionBanner(){
+  if(!state.contribution||!state.db||!['structure','players','overview','competitions','validator','settings'].includes(state.view))return;const changes=contributionChangesCached().length;const node=document.createElement('div');node.className='contrib-banner';node.innerHTML=`<div><strong>${state.contribution.type==='league'?'League':'Player'} Contribution Workspace · ${changes} change(s)</strong><small>Base ${esc(state.contribution.base.databaseId)} · official source remains read-only</small></div><div class="contrib-actions">${state.contribution.type==='league'?'<button class="btn small" data-contrib-coverage>Coverage</button>':''}<button class="btn small" data-contrib-meta>Metadata</button><button class="btn small" data-contrib-preview>Preview</button><button class="btn small primary" data-contrib-export>Export .kfmcontrib</button><button class="btn small" data-contrib-exit>Exit</button></div>`;els.content.prepend(node);$('[data-contrib-coverage]',node)?.addEventListener('click',showContributionCoverage);$('[data-contrib-meta]',node).onclick=openContributionMetadata;$('[data-contrib-preview]',node).onclick=contributionPreview;$('[data-contrib-export]',node).onclick=doContributionExport;$('[data-contrib-exit]',node).onclick=()=>{if(!changes||confirm('Exit contribution mode? The current editable copy remains loaded, but contribution tracking ends.')){state.contribution=null;render()}};
+}
+
+async function loadContributionForReview(file){
+  try {
+    // Render feedback before JSZip starts parsing. Large legacy/broken packages can
+    // otherwise make it look as if clicking the file did nothing.
+    state.page=1;state.reviewPackage={manifest:{contributionType:'Reading…',changeCount:0,seasonId:'—'}};
+    state.reviewModel={loading:true,results:[],summary:{safe:0,review:0,conflicts:0},hashMatches:null};state.reviewBaseDb=null;state.reviewEntry=null;state.reviewInspect=false;state.view='reviewContrib';render();
+    await new Promise(resolve=>setTimeout(resolve,0));
+    const pkg = await importContribution(file);
+    state.reviewPackage=pkg;render();
+    await new Promise(resolve=>setTimeout(resolve,0));
+    const list = await listOfficial();
+    const season = String(pkg.manifest.seasonId || String(pkg.manifest.baseDatabaseId || '').replace('official:', ''));
+    const entry = list.find(x => String(x.id) === season);
+    if (!entry) throw new Error(`Official base season ${season} is not available on this site.`);
+    const expectedBaseId = `official:${entry.id}`;
+    if (String(pkg.manifest.baseDatabaseId || '') !== expectedBaseId) throw new Error(`Contribution references ${pkg.manifest.baseDatabaseId}, but season ${season} resolves to ${expectedBaseId}.`);
+    state.reviewEntry=entry;
+
+    // New packages contain a hash of only the entity collections they are allowed
+    // to modify. That lets Review open without loading competitions/player packs or
+    // constructing a complete working copy first. Older packages retain the full
+    // loader fallback for compatibility.
+    let baseDb,model;
+    if(pkg.manifest.baseTrackedHash){
+      baseDb=await loadOfficialReviewBase(entry,pkg.manifest.contributionType);
+      const tracked=trackedContributionHash(pkg.manifest.contributionType,baseDb.baseData);
+      model=reviewContribution(pkg,baseDb.baseData,null,tracked);
+    }else{
+      baseDb=await loadOfficial(entry);
+      model=reviewContribution(pkg,baseDb.baseData,baseDb.baseContentHash,null);
+    }
+    state.reviewBaseDb=baseDb;state.reviewModel=model;render();
+  } catch (error) {
+    state.reviewModel=null;state.reviewBaseDb=null;state.reviewEntry=null;
+    toast(`Could not open contribution: ${error.message}`, 'error');render();
+  }
+}
+
+async function ensureFullReviewBase(){
+  if(state.reviewBaseDb&&!state.reviewBaseDb.lightweight)return state.reviewBaseDb;
+  const entry=state.reviewEntry;if(!entry)throw new Error('Official review base is not available.');
+  const button=$('#inspectContribution')||$('#mergeAccepted');if(button)button.disabled=true;
+  toast('Loading complete official database for working-copy preview…');
+  await new Promise(resolve=>setTimeout(resolve,0));
+  const full=await loadOfficial(entry);state.reviewBaseDb=full;return full;
+}
+
+async function openReviewInspector(){
+  const pkg=state.reviewPackage, model=state.reviewModel;if(!pkg||!model||model.loading)return;
+  try{
+    const base=await ensureFullReviewBase();
+    const previewRows=model.results.map(row=>({...row,accepted:true}));
+    const data=applyReviewedChanges(base.baseData,previewRows);
+    const id=`user:review-preview-${crypto.randomUUID?.()||Date.now()}`;
+    data.metadata={...(data.metadata||{}),databaseId:id,templateDatabaseId:pkg.manifest.baseDatabaseId,templateRevisionId:pkg.manifest.baseRevisionId||null,reviewPreviewContributionId:pkg.manifest.contributionId};
+    ensureIds(data,id);
+    const assets=new Map(base.assets||[]);for(const [path,blob] of pkg.assets||[])assets.set(path,blob);
+    state.reviewInspect=true;state.view=pkg.manifest.contributionType==='player'?'players':'structure';
+    setDb({manifest:{databaseId:id,displayName:`${base.manifest.displayName.replace(/ — Web Copy$/,'')} — Contribution Preview`,version:'preview',author:pkg.manifest.contributorName||'',description:'Temporary review preview. Changes here are not applied to the official database.',startDate:base.manifest.startDate,databaseSeasonId:pkg.manifest.seasonId,templateDatabaseId:pkg.manifest.baseDatabaseId,templateRevisionId:pkg.manifest.baseRevisionId,tags:['Contribution','Preview']},data,assets,source:'review-preview'});
+    els.exportBtn.disabled=true;els.metadataBtn.disabled=true;
+  }catch(error){toast(`Could not open inspector: ${error.message}`,'error');}
+}
+
+function renderReviewInspectBanner(){
+  if(!state.reviewInspect||!state.reviewPackage||!state.reviewModel||!state.db||!['structure','players'].includes(state.view))return;
+  const rows=state.reviewModel.results;
+  for(const row of rows){
+    if(row.operation==='remove')continue;
+    let node=null;
+    if(row.entityType==='league')node=$(`[data-open-league="${CSS.escape(String(row.entityId))}"]`);
+    else if(row.entityType==='club')node=$(`[data-open-club="${CSS.escape(String(row.entityId))}"]`);
+    else if(row.entityType==='player')node=$(`[data-player-row="${CSS.escape(String(row.entityId))}"]`);
+    if(node){node.classList.add('review-proposed',`review-op-${row.operation}`,`review-status-${row.reviewStatus}`);node.title=`Contribution ${row.operation} · ${row.reviewStatus}${row.reviewReason?` · ${row.reviewReason}`:''}`;}
+  }
+  const removed=rows.filter(r=>r.operation==='remove').length;
+  const node=document.createElement('div');node.className='contrib-banner review-inspect-banner';node.innerHTML=`<div><strong>Contribution Inspector Preview</strong><small>Proposed data is shown through the normal ${state.view==='players'?'Player Grid':'Structure'} view. Official database remains read-only.${removed?` ${removed} removal(s) are listed in Review and cannot be highlighted after removal.`:''}</small></div><div class="contrib-actions"><button class="btn small primary" id="backToContributionReview" type="button">Back to Review</button></div>`;
+  els.content.prepend(node);
+  $('#backToContributionReview',node).onclick=()=>{state.reviewInspect=false;state.view='reviewContrib';render()};
+}
+
+function reviewValueText(value){
+  if(value==null||value==='')return '—';
+  if(Array.isArray(value))return value.join(', ')||'—';
+  if(typeof value==='object'){try{return JSON.stringify(value)}catch(_){return String(value)}}
+  return String(value);
+}
+function reviewChangedFields(row){
+  const before=row?.before&&typeof row.before==='object'?row.before:{};
+  const after=row?.after&&typeof row.after==='object'?row.after:{};
+  const keys=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(k=>!['databaseId'].includes(k)).sort();
+  if(row?.operation==='add')return keys.map(key=>({key,before:null,after:after[key]}));
+  if(row?.operation==='remove')return keys.map(key=>({key,before:before[key],after:null}));
+  return keys.filter(key=>{try{return JSON.stringify(before[key])!==JSON.stringify(after[key])}catch(_){return String(before[key])!==String(after[key])}}).map(key=>({key,before:before[key],after:after[key]}));
+}
+function openReviewChangeDetails(row){
+  if(!row)return;
+  const fields=reviewChangedFields(row);
+  const rowsHtml=fields.slice(0,120).map(item=>`<tr><td><code>${esc(item.key)}</code></td><td>${esc(reviewValueText(item.before))}</td><td>${esc(reviewValueText(item.after))}</td></tr>`).join('');
+  modal(`Change details · ${contributionEntityLabel(row)}`,`<div class="review-detail-summary"><span class="review-chip status-${esc(row.reviewStatus)}">${esc(row.reviewStatus)}</span><span class="review-chip op-${esc(row.operation)}">${esc(row.operation)}</span><span class="review-chip">${esc(row.entityType)}</span><code>${esc(row.entityId||'')}</code></div><p class="contrib-muted">${esc(row.reviewReason||'Can be applied automatically')}</p><div class="review-detail-table"><table><thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="3">No field-level differences to display.</td></tr>'}</tbody></table></div>${fields.length>120?`<p class="contrib-muted">Showing the first 120 changed fields.</p>`:''}`,`<button class="btn" data-close2 type="button">Close</button>`,'wide');
+  $('[data-close2]',els.modal).onclick=closeModal;
+}
+
+function renderReviewContributions(){
+  els.title.textContent='Review Contributions';
+  els.subtitle.textContent='Open .kfmcontrib, compare it with the referenced official base, then merge only accepted changes into a new working copy.';
+  els.actions.innerHTML='<button class="btn primary" id="openContributionFile" type="button">Open .kfmcontrib</button>';
+  $('#openContributionFile').onclick=()=>$('#contribInput').click();
+  const pkg=state.reviewPackage,model=state.reviewModel;
+  if(!pkg||!model){els.content.innerHTML='<div class="empty-state"><div><div class="symbol">✓</div><h2>No contribution opened</h2><p>Select a .kfmcontrib file. The Studio will locate its official base and classify safe changes, review items and conflicts.</p></div></div>';return}
+  const m=pkg.manifest;
+  if(model.loading){
+    els.content.innerHTML=`<div class="card contribution-loading"><h2>Reading contribution…</h2><p>The package is already open. KFM is loading only the referenced official data needed for conflict checks.</p><div class="review-summary"><div class="review-stat"><strong>${esc(m.contributionType||'—')}</strong><span>Type</span></div><div class="review-stat"><strong>${Number(m.changeCount||0)}</strong><span>Changes</span></div><div class="review-stat"><strong>${esc(m.seasonId||'—')}</strong><span>Season</span></div></div><p class="contrib-muted">This no longer builds a complete working copy just to open the review. Full data is loaded only when you choose Inspector or Merge.</p></div>`;
+    return;
+  }
+  const rows=model.results||[];
+  const reviewPage=paginate(rows);
+  const visibleRows=reviewPage.rows;
+  const sourceHtml=(m.sources||[]).length?(m.sources||[]).map(x=>`<div>${esc(x)}</div>`).join(''):'—';
+  const hashNotice=model.hashMatches===true?'Relevant base hash matches.':model.hashMatches===false?'Contribution was created against an older or different database revision. Entity-level fingerprints are being checked.':'Base hash could not be checked yet; entity fingerprints are used.';
+  const hashMark=model.hashMatches===true?'✓':model.hashMatches===false?'⚠':'…';
+  const ignoredLegacy=Number(pkg.ignoredChanges?.length||m.legacyIgnoredChangeCount||0);
+  const legacyNotice=ignoredLegacy?`<div class="card contribution-recovery-note"><b>Recovered old player contribution</b><p>${ignoredLegacy} invalid non-player change${ignoredLegacy===1?' was':'s were'} ignored. These were generated by the earlier contribution prototype and are not part of the player submission.</p></div>`:'';
+  const changeRowsHtml=visibleRows.map((r,i)=>{const absoluteIndex=reviewPage.start+i;const label=contributionEntityLabel(r);const reason=r.reviewReason||'Can be applied automatically';return `<div class="review-change-row diff-${esc(r.reviewStatus)}" data-review-row="${absoluteIndex}"><label class="review-change-accept" title="Accept this change"><input type="checkbox" data-review-accept="${absoluteIndex}" ${r.accepted?'checked':''}><span>Accept</span></label><div class="review-change-main"><div class="review-change-title"><strong>${esc(label)}</strong><span class="review-chip status-${esc(r.reviewStatus)}">${esc(r.reviewStatus)}</span><span class="review-chip op-${esc(r.operation)}">${esc(r.operation)}</span><span class="review-chip">${esc(r.entityType)}</span></div><div class="review-change-reason">${esc(reason)}</div><div class="review-change-id">ID: ${esc(r.entityId||'—')}</div></div><button class="btn small" type="button" data-review-details="${absoluteIndex}">Details</button></div>`}).join('');
+  els.content.innerHTML=`${legacyNotice}<div class="review-summary"><div class="review-stat"><strong>${esc(m.contributionType)}</strong><span>Type</span></div><div class="review-stat"><strong>${rows.length}</strong><span>Changes</span></div><div class="review-stat"><strong>${model.summary.safe}</strong><span>Safe</span></div><div class="review-stat"><strong>${model.summary.review}</strong><span>Review</span></div><div class="review-stat"><strong>${model.summary.conflicts}</strong><span>Conflicts</span></div></div><div class="card"><dl class="meta-list"><dt>Base</dt><dd>${esc(m.baseDatabaseId)}</dd><dt>Base revision</dt><dd>${esc(m.baseRevisionId||'—')}</dd><dt>Base hash</dt><dd>${esc(m.baseTrackedHash||m.baseContentHash||'—')} ${hashMark}</dd><dt>Base status</dt><dd>${esc(hashNotice)}</dd><dt>Contributor</dt><dd>${esc(m.contributorName||'—')}</dd><dt>Discord</dt><dd>${esc(m.discordName||'—')}</dd><dt>Sources</dt><dd>${sourceHtml}</dd><dt>Notes</dt><dd>${esc(m.notes||'—')}</dd></dl></div><div class="contrib-actions review-toolbar"><button class="btn" id="inspectContribution" type="button">Inspect in normal editor</button><button class="btn" id="reviewAcceptSafe" type="button">Accept all safe</button><button class="btn" id="reviewAcceptNonConflicts" type="button">Accept all non-conflicts</button><button class="btn" id="reviewRejectAll" type="button">Reject all</button><button class="btn primary" id="mergeAccepted" type="button">Merge accepted into Working Copy</button></div><div class="card review-change-card"><div class="review-change-head"><span>Accept</span><span>Change</span><span>Inspect</span></div><div class="review-change-list">${changeRowsHtml||'<div class="table-empty">No usable changes in this contribution.</div>'}</div>${pager(rows.length,reviewPage.pages,reviewPage.start)}</div>`;
+  $$('[data-review-accept]').forEach(x=>x.onchange=()=>{const row=rows[Number(x.dataset.reviewAccept)];if(row)row.accepted=x.checked});
+  $$('[data-review-details]').forEach(button=>button.onclick=()=>openReviewChangeDetails(rows[Number(button.dataset.reviewDetails)]));
+  $$('[data-page]').forEach(button=>button.addEventListener('click',()=>{state.page+=button.dataset.page==='next'?1:-1;renderReviewContributions()}));
+  $('#inspectContribution').onclick=openReviewInspector;
+  $('#reviewAcceptSafe').onclick=()=>{for(const r of rows)r.accepted=r.reviewStatus==='safe';renderReviewContributions()};
+  $('#reviewAcceptNonConflicts').onclick=()=>{for(const r of rows)r.accepted=r.reviewStatus!=='conflict';renderReviewContributions()};
+  $('#reviewRejectAll').onclick=()=>{for(const r of rows)r.accepted=false;renderReviewContributions()};
+  $('#mergeAccepted').onclick=async()=>{
+    const accepted=rows.filter(x=>x.accepted);if(!accepted.length){toast('No accepted changes selected.','error');return}
+    const button=$('#mergeAccepted');if(button){button.disabled=true;button.textContent='Loading base…'}
+    try{
+      const base=await ensureFullReviewBase();
+      const data=applyReviewedChanges(base.baseData,rows);const id=`user:review-${crypto.randomUUID?.()||Date.now()}`;
+      data.metadata={...(data.metadata||{}),databaseId:id,templateDatabaseId:m.baseDatabaseId,templateRevisionId:m.baseRevisionId||null,mergedContributionId:m.contributionId};ensureIds(data,id);
+      const assets=new Map(base.assets||[]);for(const [path,blob] of pkg.assets||[])assets.set(path,blob);
+      state.reviewInspect=false;state.view='overview';
+      setDb({manifest:{databaseId:id,displayName:`${base.manifest.displayName.replace(/ — Web Copy$/,'')} — Reviewed Contribution`,version:'1.0.0',author:m.contributorName||'',description:`Working copy merged from ${m.contributionId}`,startDate:base.manifest.startDate,databaseSeasonId:m.seasonId,templateDatabaseId:m.baseDatabaseId,templateRevisionId:m.baseRevisionId,tags:['Custom','Contribution Review']},data,assets,source:'review-working-copy'});
+      state.reviewPackage=null;state.reviewModel=null;state.reviewBaseDb=null;state.reviewEntry=null;render();toast(`${accepted.length} accepted change(s) merged into a new working copy. Official database unchanged.`);
+    }catch(error){toast(`Merge failed: ${error.message}`,'error');if(button){button.disabled=false;button.textContent='Merge accepted into Working Copy'}}
+  };
+}
+
+
+function showPlayerPackResolveError(error,entry){
+  const result=error?.playerPackResult;
+  if(error?.code!=='PLAYER_PACK_PARTIAL_FAILURE'||!result){toast(`Could not load official data: ${error.message}`,'error');return}
+  const failed=result.failures||[];const loaded=result.packs||[];
+  const first=failed[0]||{};const attempts=first.attempts||[];
+  const pages=attempts.filter(a=>a.source==='Pages');
+  const pagesMissing=pages.length&&pages.every(a=>a.status===404);
+  const sourceAttempt=attempts.find(a=>String(a.source||'').startsWith('GitHub source'));const remoteAttempt=attempts.find(a=>String(a.source||'').startsWith('GitHub release'))||attempts.find(a=>String(a.source||'').startsWith('GitHub browser'))||attempts.find(a=>String(a.source||'').startsWith('GitHub API'));
+  const environmentFailure=Boolean(result.environmentFailure);
+  const statusText=environmentFailure
+    ? 'The browser could not resolve even the first compatible pack, so KFM stopped immediately instead of launching dozens of doomed requests.'
+    : `${loaded.length}/${loaded.length+failed.length} compatible packs loaded; ${failed.length} failed.`;
+  const detail=pagesMissing
+    ? `Same-origin pack files are missing from <code>/assets/player-packs/</code>.${sourceAttempt?` GitHub repository source: ${esc(sourceAttempt.status||sourceAttempt.error||'not available')}.`:''}${remoteAttempt?` Legacy release fallback: ${esc(remoteAttempt.status||remoteAttempt.error||'fetch failed')}.`:''}`
+    : esc(first.message||'One or more player packs could not be loaded.');
+  const sample=environmentFailure
+    ? `<tr><td>${esc(first.pack?.name||first.pack?.id||'First pack')}</td><td>${detail}</td></tr>`
+    : failed.slice(0,12).map(f=>{const a=f.attempts||[];const p=a.find(x=>x.source==='Pages');return `<tr><td>${esc(f.pack?.name||f.pack?.id||'Pack')}</td><td>${p?.status===404?'Missing from /assets/player-packs/':esc((p?.error||f.message||'Failed').slice(0,120))}</td></tr>`}).join('');
+  modal('Player pack resolve failed',`<div class="card"><p><b>${statusText}</b></p><p>KFM v20 first tries same-origin <code>/assets/player-packs/</code>. If those files are not deployed, it checks the GitHub release-tag source and then the repository's current default branch. Only after that does it try legacy release-download URLs. If Android fallback was selected while creating the copy, KFM can still create the database and resolve locally installed packs during Android import.</p><p class="contrib-muted">If the repository tag does not contain the pack JSON itself, a static page cannot read the release asset directly when GitHub omits CORS. In that case the included sync script / Pages build step remains the reliable same-origin deployment fallback.</p></div><div class="card table-wrap"><table><thead><tr><th>Pack</th><th>Problem</th></tr></thead><tbody>${sample}</tbody></table>${!environmentFailure&&failed.length>12?`<p class="contrib-muted">…and ${failed.length-12} more. No partial custom database was created.</p>`:''}</div>`,`<button class="btn" data-close2 type="button">Close</button>`,'wide');
+  $('[data-close2]',els.modal).onclick=closeModal;
+}
+
 async function openOfficial() {
   try {
     const list = await listOfficial();
-    const packCounts = new Map();
+    const compatiblePacksBySeason = new Map();
     await Promise.all(list.map(async entry => {
-      try { packCounts.set(String(entry.id), (await compatiblePlayerPacks(entry.id, entry.revisionId || null)).length); }
-      catch (_) { packCounts.set(String(entry.id), 0); }
+      try { compatiblePacksBySeason.set(String(entry.id), await compatiblePlayerPacks(entry.id, entry.revisionId || null)); }
+      catch (_) { compatiblePacksBySeason.set(String(entry.id), []); }
     }));
     modal('Create from official database', `<div class="source-options">${list.map(x => {
-      const packCount = Number(packCounts.get(String(x.id)) || 0);
+      const compatiblePacks = compatiblePacksBySeason.get(String(x.id)) || [];
+      const packCount = compatiblePacks.length;
       return `<div class="source-card source-card-rich">
         <div class="source-card-copy"><strong>${esc(x.label)}</strong><span>${esc(x.startDate || '')} · creates an editable standalone copy</span></div>
         <label class="pack-resolve-option ${packCount ? '' : 'disabled'}">
           <input type="checkbox" data-resolve-packs="${esc(x.id)}" ${packCount ? '' : 'disabled'}>
-          <span><b>Resolve compatible player packs into the copy</b><small>${packCount ? `${packCount} compatible pack${packCount === 1 ? '' : 's'} available. Players are embedded into the custom database.` : 'No compatible player packs are available for this database season.'}</small></span>
+          <span><b>Try to resolve compatible player packs in the browser</b><small>${packCount ? `${packCount} compatible pack${packCount === 1 ? '' : 's'} available. KFM tries same-origin, release-tag source and the current GitHub default branch.` : 'No compatible player packs are available for this database season.'}</small></span>
+        </label>
+        <label class="pack-resolve-option ${packCount ? '' : 'disabled'}">
+          <input type="checkbox" data-defer-packs="${esc(x.id)}" ${packCount ? 'checked' : 'disabled'}>
+          <span><b>Fallback: resolve installed packs when this .kfmdb is installed on Android</b><small>${packCount ? 'If the browser cannot read the pack files, the exported database remembers this request. On Android, KFM copies any locally installed compatible packs into the database during installation.' : 'No compatible packs exist for this season.'}</small></span>
         </label>
         <div class="source-card-actions"><button class="btn primary" data-load-season="${esc(x.id)}" type="button">Create editable copy</button></div>
       </div>`;
@@ -1980,12 +2272,16 @@ async function openOfficial() {
       const entry = list.find(x => String(x.id) === String(button.dataset.loadSeason));
       if (!entry) return;
       const resolvePacks = Boolean($(`[data-resolve-packs="${CSS.escape(String(entry.id))}"]`, els.modal)?.checked);
+      const deferPacks = Boolean($(`[data-defer-packs="${CSS.escape(String(entry.id))}"]`, els.modal)?.checked);
+      const deferredPackIds = (compatiblePacksBySeason.get(String(entry.id)) || []).map(pack => String(pack.id || '')).filter(Boolean);
       button.disabled = true;
       button.textContent = resolvePacks ? 'Resolving player packs…' : 'Loading…';
       toast(resolvePacks ? `Loading ${entry.label} and resolving compatible player packs…` : `Loading ${entry.label}…`);
       try {
         const db = await loadOfficial(entry, {
           resolvePlayerPacks: resolvePacks,
+          deferPlayerPacksToAndroid: deferPacks,
+          deferredPlayerPackIds: deferredPackIds,
           onPackProgress: info => {
             if (!resolvePacks || !info?.pack) return;
             const current = Math.max(1, Number(info.index || 0) + (info.stage === 'resolved' ? 0 : 1));
@@ -1996,11 +2292,12 @@ async function openOfficial() {
         setDb(db);
         const count = Number(db.data?.metadata?.resolvedPlayerPackPlayerCount || 0);
         const packs = Number(db.data?.metadata?.resolvedPlayerPackIds?.length || 0);
-        toast(resolvePacks ? `${entry.label} copied with ${count.toLocaleString()} players from ${packs} compatible player packs.` : `${entry.label} loaded as an editable copy.`);
+        const deferred = db.data?.metadata?.deferredPlayerPackResolution?.requested === true;
+        toast(count > 0 ? `${entry.label} copied with ${count.toLocaleString()} players from ${packs} compatible player packs.` : deferred ? `${entry.label} copied. Player packs will be resolved from installed compatible packs when the .kfmdb is installed on Android.` : `${entry.label} loaded as an editable copy.`);
       } catch (error) {
         button.disabled = false;
         button.textContent = 'Create editable copy';
-        toast(`Could not load official data: ${error.message}`, 'error');
+        showPlayerPackResolveError(error,entry);
       }
     }));
   } catch (error) { toast(`Official database catalog not found. Copy the game JSON files into assets/data. ${error.message}`, 'error'); }
@@ -2016,7 +2313,7 @@ function newDatabase() {
     button.disabled = true; button.textContent = 'Preparing workbase…';
     try {
       const data = await loadReferenceScaffold();
-      data.metadata = { databaseId: id, schemaVersion: 1, startDate: fd.startDate || '2026-07-01', startYear: Number((fd.startDate || '2026-07-01').slice(0, 4)) };
+      data.metadata = { databaseId: id, schemaVersion: 1, startDate: fd.startDate || '2026-07-01', startYear: Number((fd.startDate || '2026-07-01').slice(0, 4)) }; ensureDatabaseSettings(data, data.metadata.startYear);
       ensureIds(data, id);
       setDb({ manifest: { databaseId: id, displayName: fd.name || 'My Database', author: fd.author || '', version: fd.version || '1.0.0', description: fd.description || '', startDate: fd.startDate || '2026-07-01', tags: ['Custom'] }, data, assets: new Map(), source: 'new' });
       closeModal();
@@ -2052,6 +2349,8 @@ async function doExport() {
   } catch (error) { toast(`Export failed: ${error.message}`, 'error'); }
 }
 
+
+$('#contribInput').addEventListener('change', async e => { const file=e.target.files?.[0]; e.target.value=''; if(file) await loadContributionForReview(file); });
 $('#newDbBtn').addEventListener('click', newDatabase);
 $('#openOfficialBtn').addEventListener('click', openOfficial);
 $('#importBtn').addEventListener('click', () => $('#kfmdbInput').click());
@@ -2069,7 +2368,7 @@ $('#jsonInput').addEventListener('change', async event => {
   const file = event.target.files?.[0]; event.target.value = ''; if (!file || !requireDb()) return;
   try {
     const json = JSON.parse(await file.text()); if (!Array.isArray(json)) throw new Error('Expected a JSON array');
-    if (event.target.dataset.mode === 'players') { const items = json.map(p => ({ ...p, id: p.id || makeId('PLAYER'), playerId: p.playerId || p.id || makeId('PLAYER'), databaseId: state.db.manifest.databaseId })); state.db.data.players.push(...items); ensureIds(state.db.data, state.db.manifest.databaseId); dirty(); toast(`${items.length} players imported.`); render(); }
+    if (event.target.dataset.mode === 'players') { const items = json.map(p => ({ ...p, id: p.id || makeId('PLAYER'), playerId: p.playerId || p.id || makeId('PLAYER'), databaseId: state.db.manifest.databaseId })); state.db.data.players.push(...items); ensureIds(state.db.data, state.db.manifest.databaseId); for (const p of items) markPlayerAdded(p); dirty(); toast(`${items.length} players imported.`); render(); }
   } catch (error) { toast(`JSON import failed: ${error.message}`, 'error'); }
 });
 
@@ -2118,7 +2417,7 @@ $('#imageInput').addEventListener('change', async event => {
       delete p.image;
       p.faceMode = 'upload'; p.usePlaceholderFace = false;
       const rerenderGrid = Boolean(target.fromGrid);
-      dirty(); toast(optimizationToast(optimized));
+      markPlayerTouched(p); dirty(); toast(optimizationToast(optimized));
       state.imageTarget = null;
       if (rerenderGrid) render();
       return;

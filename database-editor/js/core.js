@@ -1,6 +1,20 @@
 export const DB_SCHEMA_VERSION=1;
 export const POSITIONS=['GK','RB','CB','LB','CDM','CM','CAM','RM','RW','LM','LW','ST','CF'];
 export const FEET=['Right','Left','Both'];
+export const ADDITIONAL_PLAYER_AUTO_THRESHOLD=18;
+export function additionalPlayerGenerationMode(club){
+ const raw=String(club?.additionalPlayerGeneration||'').trim().toLowerCase();
+ if(['auto','always','off'].includes(raw))return raw;
+ if(club?.generateAdditionalPlayers===false)return 'off';
+ if(club?.generateAdditionalPlayers===true)return 'always';
+ return 'auto';
+}
+export function shouldGenerateAdditionalPlayers(club,databasePlayerCount=0){
+ const mode=additionalPlayerGenerationMode(club);
+ if(mode==='always')return true;
+ if(mode==='off')return false;
+ return Math.max(0,Number(databasePlayerCount)||0)<ADDITIONAL_PLAYER_AUTO_THRESHOLD;
+}
 export const DATA_FILES={
  'data/confederations.json':'confederations','data/nations.json':'nations','data/leagues.json':'leagues','data/league_flow.json':'leagueFlows','data/clubs.json':'clubs','data/players.json':'players','data/competitions.json':'competitions','data/metadata.json':'metadata'
 };
@@ -25,7 +39,7 @@ export function ensureIds(data,databaseId='user:web'){
  data.metadata.databaseId=databaseId;data.metadata.schemaVersion=DB_SCHEMA_VERSION;return data
 }
 export function deriveConfederations(nations){const m=new Map();for(const n of nations||[]){const code=String(n.confederation||'FIFA').toUpperCase();if(!m.has(code))m.set(code,{id:code,ruleId:code,name:code,displayName:code,sortOrder:m.size,isBuiltInRule:true})}return [...m.values()]}
-export function indexes(data){const nationByName=new Map(data.nations.map(x=>[String(x.name),x])),leagueByName=new Map(data.leagues.map(x=>[String(x.name),x])),leagueById=new Map(data.leagues.map(x=>[String(x.id),x])),clubById=new Map(data.clubs.map(x=>[String(x.id),x]));const clubsByLeague=new Map(),playersByClub=new Map();for(const c of data.clubs){const lid=String(c.leagueId||leagueByName.get(String(c.league||''))?.id||'');if(!clubsByLeague.has(lid))clubsByLeague.set(lid,[]);clubsByLeague.get(lid).push(c)}for(const p of data.players){const id=String(p.clubId||'');if(!playersByClub.has(id))playersByClub.set(id,[]);playersByClub.get(id).push(p)}return{nationByName,leagueByName,leagueById,clubById,clubsByLeague,playersByClub}}
+export function indexes(data){const nationByName=new Map(data.nations.map(x=>[String(x.name),x])),leagueByName=new Map(data.leagues.map(x=>[String(x.name),x])),leagueById=new Map(data.leagues.map(x=>[String(x.id),x])),clubById=new Map(data.clubs.map(x=>[String(x.id),x])),clubByLowerName=new Map(),playerById=new Map(),clubSearch=[];const clubsByLeague=new Map(),playersByClub=new Map();for(const c of data.clubs){const lid=String(c.leagueId||leagueByName.get(String(c.league||''))?.id||'');if(!clubsByLeague.has(lid))clubsByLeague.set(lid,[]);clubsByLeague.get(lid).push(c);const lower=String(c.name||'').trim().toLowerCase();if(lower&&!clubByLowerName.has(lower))clubByLowerName.set(lower,c);clubSearch.push({club:c,key:`${lower} ${String(c.id||'').toLowerCase()}`})}for(const p of data.players){const id=String(p.clubId||'');if(!playersByClub.has(id))playersByClub.set(id,[]);playersByClub.get(id).push(p);if(p?.id!=null)playerById.set(String(p.id),p)}return{nationByName,leagueByName,leagueById,clubById,clubByLowerName,playerById,clubSearch,clubsByLeague,playersByClub}}
 export function validate(data){const issues=[],seen=(arr,type)=>{const s=new Set();for(const x of arr){if(!x?.id)issues.push({severity:'error',type,message:`${type} is missing an ID`,entity:x});else if(s.has(String(x.id)))issues.push({severity:'error',type,message:`Duplicate ${type} ID: ${x.id}`,entity:x});s.add(String(x.id))}};seen(data.nations,'Nation');seen(data.leagues,'League');seen(data.clubs,'Club');seen(data.players,'Player');const ix=indexes(data);for(const l of data.leagues)if(l.nationId&&!data.nations.some(n=>String(n.id)===String(l.nationId)))issues.push({severity:'error',type:'League',message:`${l.name}: missing nation ${l.nationId}`,entity:l});for(const c of data.clubs)if(c.leagueId&&!ix.leagueById.has(String(c.leagueId)))issues.push({severity:'error',type:'Club',message:`${c.name}: missing league ${c.leagueId}`,entity:c});for(const p of data.players)if(p.clubId&&!ix.clubById.has(String(p.clubId)))issues.push({severity:'error',type:'Player',message:`${p.firstName||''} ${p.lastName||p.name||''}: missing club ${p.clubId}`,entity:p});for(const l of data.leagues){const actual=ix.clubsByLeague.get(String(l.id))?.length||0;if(Number(l.teams||0)&&Number(l.teams)!==actual)issues.push({severity:'warning',type:'League',message:`${l.name}: stored team count ${l.teams}, actual ${actual}`,entity:l})}return issues}
 export function ratingClass(v){v=Number(v||0);return v>=85?'elite':v>=78?'high':v>=70?'good':v>=60?'mid':'low'}
 export function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}

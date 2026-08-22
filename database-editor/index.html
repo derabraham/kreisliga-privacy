@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>Kreisliga Manager Database Studio</title>
   <link rel="icon" type="image/png" href="../assets/kreisliga-logo.png">
-  <link rel="stylesheet" href="css/styles.css?v=20260822-15">
+  <link rel="stylesheet" href="css/styles.css?v=20260822-20">
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -32,6 +32,10 @@
         <button data-view="players"><span>♙</span> Players <em class="nav-badge">Grid</em></button>
         <button data-view="competitions"><span>★</span> Competitions</button>
         <button data-view="validator"><span>◇</span> Validator</button>
+        <button data-view="settings"><span>⚙</span> Database Settings</button>
+        <button data-view="leagueContrib"><span>＋</span> Contribute Leagues</button>
+        <button data-view="playerContrib"><span>♙</span> Contribute Players</button>
+        <button data-view="reviewContrib"><span>✓</span> Review Contributions</button>
       </nav>
       <div class="sidebar-help">
         <b>Desktop workflow</b>
@@ -55,12 +59,13 @@
   <input id="kfmdbInput" type="file" accept=".kfmdb,application/zip,application/octet-stream" hidden>
   <input id="jsonInput" type="file" accept=".json,application/json" hidden>
   <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+  <input id="contribInput" type="file" accept=".kfmcontrib,application/zip,application/octet-stream" hidden>
   <input id="flagInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
 
   <div id="modalRoot"></div>
   <div id="toastRoot" class="toast-root"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script type="module" src="js/app.js?v=20260822-15"></script>
+  <script type="module" src="js/app.js?v=20260822-20"></script>
 </body>
 </html>

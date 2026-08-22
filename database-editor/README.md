@@ -41,3 +41,16 @@ Import/export uses the game package layout. Existing package assets are retained
 - The player details drawer uses the game attribute names, a 3-3-2-3-3 attribute layout, and the in-game trait IDs through an Add Trait picker.
 - Nation confederation points use the same static seed-score calculation as `confederation-coefficient-engine.js` when no explicit coefficient is stored.
 - Club colour editing reads and writes the app's `primarycolor` / `secondarycolor` fields (plus camelCase compatibility aliases) and shows a live preview.
+
+
+## Database / Era Settings
+
+`Database Settings` stores a shared `metadata.databaseSettings` block used by Web and App. Legacy databases normalize to modern defaults. Finance/inflation, globalization, transfer activity, attendance and youth-internationalization settings are designed so defaults preserve current behavior.
+
+## Community Contributions
+
+`Contribute Leagues` and `Contribute Players` always begin from an official base snapshot and reuse the normal Structure / Player Grid editor. `Review Contributions` opens the resulting `.kfmcontrib`, checks its official base ID/revision/hash, classifies safe changes/review items/conflicts, and merges only accepted changes into a new working copy. Official databases remain read-only.
+
+### Browser player-pack resolver
+
+`Resolve compatible player packs` prefers same-origin files under `assets/player-packs/`. Run `SYNC_PLAYER_PACKS.cmd` (Windows) or `node database-editor/scripts/sync-player-packs.mjs` after merging the Studio into the complete website repository. The browser has a GitHub API fallback, but the same-origin copy is the deterministic production path.
