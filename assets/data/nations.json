@@ -1,0 +1,3496 @@
+[
+  {
+    "name": "Afghanistan",
+    "confederation": "AFC",
+    "team_rating": 46.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Ägypten",
+    "confederation": "CAF",
+    "team_rating": 67.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Albanien",
+    "confederation": "UEFA",
+    "team_rating": 67.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Algerien",
+    "confederation": "CAF",
+    "team_rating": 67.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Andorra",
+    "confederation": "UEFA",
+    "team_rating": 52.3,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Angola",
+    "confederation": "CAF",
+    "team_rating": 58.7,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Antigua und Barbuda",
+    "confederation": "CONCACAF",
+    "team_rating": 47.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Argentinien",
+    "confederation": "CONMEBOL",
+    "team_rating": 82.0,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 4,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Armenien",
+    "confederation": "UEFA",
+    "team_rating": 63.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Aruba",
+    "confederation": "CONCACAF",
+    "team_rating": 38.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Aserbaidschan",
+    "confederation": "UEFA",
+    "team_rating": 62.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Äthiopien",
+    "confederation": "CAF",
+    "team_rating": 52.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Australien",
+    "confederation": "AFC",
+    "team_rating": 73.5,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Bahrain",
+    "confederation": "AFC",
+    "team_rating": 59.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Bangladesch",
+    "confederation": "AFC",
+    "team_rating": 44.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Barbados",
+    "confederation": "CONCACAF",
+    "team_rating": 42.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Belarus",
+    "confederation": "UEFA",
+    "team_rating": 64.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Belgien",
+    "confederation": "UEFA",
+    "team_rating": 82.9,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Benin",
+    "confederation": "CAF",
+    "team_rating": 56.3,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Bermuda",
+    "confederation": "CONCACAF",
+    "team_rating": 44.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Bhutan",
+    "confederation": "AFC",
+    "team_rating": 34.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Bolivien",
+    "confederation": "CONMEBOL",
+    "team_rating": 70.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Bonaire",
+    "confederation": "CONCACAF",
+    "team_rating": 36.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Bosnien und Herzegowina",
+    "confederation": "UEFA",
+    "team_rating": 70.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Botswana",
+    "confederation": "CAF",
+    "team_rating": 50.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Brasilien",
+    "confederation": "CONMEBOL",
+    "team_rating": 82.5,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 4,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Brunei",
+    "confederation": "AFC",
+    "team_rating": 37.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Bulgarien",
+    "confederation": "UEFA",
+    "team_rating": 66.3,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Burkina Faso",
+    "confederation": "CAF",
+    "team_rating": 58.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Burundi",
+    "confederation": "CAF",
+    "team_rating": 48.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Chile",
+    "confederation": "CONMEBOL",
+    "team_rating": 72.8,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "China",
+    "confederation": "AFC",
+    "team_rating": 65.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Costa Rica",
+    "confederation": "CONCACAF",
+    "team_rating": 68.3,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "central_american_cup": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Curaçao",
+    "confederation": "CONCACAF",
+    "team_rating": 50.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Dänemark",
+    "confederation": "UEFA",
+    "team_rating": 76.8,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Demokratische Republik Kongo",
+    "confederation": "CAF",
+    "team_rating": 60.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Deutschland",
+    "confederation": "UEFA",
+    "team_rating": 86.7,
+    "relevant_leagues": 4,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 4,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Dominikanische Republik",
+    "confederation": "CONCACAF",
+    "team_rating": 42.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Dschibuti",
+    "confederation": "CAF",
+    "team_rating": 38.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Ecuador",
+    "confederation": "CONMEBOL",
+    "team_rating": 73.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "El Salvador",
+    "confederation": "CONCACAF",
+    "team_rating": 60.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "central_american_cup": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Elfenbeinküste",
+    "confederation": "CAF",
+    "team_rating": 68.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "England",
+    "confederation": "UEFA",
+    "team_rating": 87.4,
+    "relevant_leagues": 4,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 4,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Eritrea",
+    "confederation": "CAF",
+    "team_rating": 35.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Estland",
+    "confederation": "UEFA",
+    "team_rating": 58.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Eswatini",
+    "confederation": "CAF",
+    "team_rating": 46.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Färöer Inseln",
+    "confederation": "UEFA",
+    "team_rating": 55.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Fidschi",
+    "confederation": "OFC",
+    "team_rating": 48.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Finnland",
+    "confederation": "UEFA",
+    "team_rating": 68.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Frankreich",
+    "confederation": "UEFA",
+    "team_rating": 83.4,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 3,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Gabun",
+    "confederation": "CAF",
+    "team_rating": 57.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Gambia",
+    "confederation": "CAF",
+    "team_rating": 52.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Georgien",
+    "confederation": "UEFA",
+    "team_rating": 65.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Ghana",
+    "confederation": "CAF",
+    "team_rating": 67.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Gibraltar",
+    "confederation": "UEFA",
+    "team_rating": 48.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Grenada",
+    "confederation": "CONCACAF",
+    "team_rating": 43.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Griechenland",
+    "confederation": "UEFA",
+    "team_rating": 72.6,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Guinea",
+    "confederation": "CAF",
+    "team_rating": 58.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Guinea-Bissau",
+    "confederation": "CAF",
+    "team_rating": 45.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Guyana",
+    "confederation": "CONCACAF",
+    "team_rating": 48.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Haiti",
+    "confederation": "CONCACAF",
+    "team_rating": 55.3,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Honduras",
+    "confederation": "CONCACAF",
+    "team_rating": 63.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "central_american_cup": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Hongkong",
+    "confederation": "AFC",
+    "team_rating": 54.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Indien",
+    "confederation": "AFC",
+    "team_rating": 60.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Indonesien",
+    "confederation": "AFC",
+    "team_rating": 56.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Irak",
+    "confederation": "AFC",
+    "team_rating": 62.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Iran",
+    "confederation": "AFC",
+    "team_rating": 70.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Irland",
+    "confederation": "UEFA",
+    "team_rating": 69.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Island",
+    "confederation": "UEFA",
+    "team_rating": 62.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Israel",
+    "confederation": "UEFA",
+    "team_rating": 70.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Italien",
+    "confederation": "UEFA",
+    "team_rating": 83.7,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 4,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Jamaika",
+    "confederation": "CONCACAF",
+    "team_rating": 58.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Japan",
+    "confederation": "AFC",
+    "team_rating": 75.8,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 3,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Jemen",
+    "confederation": "AFC",
+    "team_rating": 42.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Jordanien",
+    "confederation": "AFC",
+    "team_rating": 58.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kambodscha",
+    "confederation": "AFC",
+    "team_rating": 43.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kamerun",
+    "confederation": "CAF",
+    "team_rating": 66.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kanada",
+    "confederation": "CONCACAF",
+    "team_rating": 72.5,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "canadian_championship": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kap Verde",
+    "confederation": "CAF",
+    "team_rating": 55.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kasachstan",
+    "confederation": "UEFA",
+    "team_rating": 61.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Katar",
+    "confederation": "AFC",
+    "team_rating": 68.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 3,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kenia",
+    "confederation": "CAF",
+    "team_rating": 54.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kirgisistan",
+    "confederation": "AFC",
+    "team_rating": 48.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kolumbien",
+    "confederation": "CONMEBOL",
+    "team_rating": 75.5,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Komoren",
+    "confederation": "CAF",
+    "team_rating": 42.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kosovo",
+    "confederation": "UEFA",
+    "team_rating": 60.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Kroatien",
+    "confederation": "UEFA",
+    "team_rating": 82.6,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Kuba",
+    "confederation": "CONCACAF",
+    "team_rating": 53.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Kuwait",
+    "confederation": "AFC",
+    "team_rating": 60.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Laos",
+    "confederation": "AFC",
+    "team_rating": 40.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Lesotho",
+    "confederation": "CAF",
+    "team_rating": 44.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Lettland",
+    "confederation": "UEFA",
+    "team_rating": 60.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Libanon",
+    "confederation": "AFC",
+    "team_rating": 55.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Liberia",
+    "confederation": "CAF",
+    "team_rating": 48.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Libyen",
+    "confederation": "CAF",
+    "team_rating": 54.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Litauen",
+    "confederation": "UEFA",
+    "team_rating": 59.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Luxemburg",
+    "confederation": "UEFA",
+    "team_rating": 58.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Macau",
+    "confederation": "AFC",
+    "team_rating": 38.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Madagaskar",
+    "confederation": "CAF",
+    "team_rating": 52.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Malawi",
+    "confederation": "CAF",
+    "team_rating": 49.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Malaysia",
+    "confederation": "AFC",
+    "team_rating": 57.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Malediven",
+    "confederation": "AFC",
+    "team_rating": 42.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Mali",
+    "confederation": "CAF",
+    "team_rating": 61.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Malta",
+    "confederation": "UEFA",
+    "team_rating": 52.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Marokko",
+    "confederation": "CAF",
+    "team_rating": 71.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Mauretanien",
+    "confederation": "CAF",
+    "team_rating": 46.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Mauritius",
+    "confederation": "CAF",
+    "team_rating": 47.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Mexiko",
+    "confederation": "CONCACAF",
+    "team_rating": 78.5,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 5,
+        "qualification_rounds": 0
+      },
+      "liga_mx": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Mikronesien",
+    "confederation": "OFC",
+    "team_rating": 32.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Moldau",
+    "confederation": "UEFA",
+    "team_rating": 59.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Mongolei",
+    "confederation": "AFC",
+    "team_rating": 35.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Montenegro",
+    "confederation": "UEFA",
+    "team_rating": 63.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Mosambik",
+    "confederation": "CAF",
+    "team_rating": 50.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Myanmar",
+    "confederation": "AFC",
+    "team_rating": 45.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Namibia",
+    "confederation": "CAF",
+    "team_rating": 51.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Neuseeland",
+    "confederation": "OFC",
+    "team_rating": 66.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Niederlande",
+    "confederation": "UEFA",
+    "team_rating": 82.7,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Niger",
+    "confederation": "CAF",
+    "team_rating": 46.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Nigeria",
+    "confederation": "CAF",
+    "team_rating": 69.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Nordirland",
+    "confederation": "UEFA",
+    "team_rating": 60.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Nordmazedonien",
+    "confederation": "UEFA",
+    "team_rating": 62.2,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Norwegen",
+    "confederation": "UEFA",
+    "team_rating": 72.0,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Oman",
+    "confederation": "AFC",
+    "team_rating": 56.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Österreich",
+    "confederation": "UEFA",
+    "team_rating": 75.2,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Osttimor",
+    "confederation": "AFC",
+    "team_rating": 32.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Pakistan",
+    "confederation": "AFC",
+    "team_rating": 39.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Panama",
+    "confederation": "CONCACAF",
+    "team_rating": 62.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 5,
+        "qualification_rounds": 0
+      },
+      "liga_mx": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Palästina",
+    "confederation": "AFC",
+    "team_rating": 52.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Papua-Neuguinea",
+    "confederation": "OFC",
+    "team_rating": 43.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Paraguay",
+    "confederation": "CONMEBOL",
+    "team_rating": 71.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Peru",
+    "confederation": "CONMEBOL",
+    "team_rating": 70.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Philippinen",
+    "confederation": "AFC",
+    "team_rating": 49.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Polen",
+    "confederation": "UEFA",
+    "team_rating": 73.8,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Portugal",
+    "confederation": "UEFA",
+    "team_rating": 84.0,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Republik Kongo",
+    "confederation": "CAF",
+    "team_rating": 53.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Ruanda",
+    "confederation": "CAF",
+    "team_rating": 47.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Rumänien",
+    "confederation": "UEFA",
+    "team_rating": 71.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Russland",
+    "confederation": "UEFA",
+    "team_rating": 76.5,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Saint-Barthélemy",
+    "confederation": "CONCACAF",
+    "team_rating": 28.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Salomonen",
+    "confederation": "OFC",
+    "team_rating": 46.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Sambia",
+    "confederation": "CAF",
+    "team_rating": 56.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Samoa",
+    "confederation": "OFC",
+    "team_rating": 51.8,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "San Marino",
+    "confederation": "UEFA",
+    "team_rating": 42.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Sansibar",
+    "confederation": "CAF",
+    "team_rating": 43.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "São Tomé & Príncipe",
+    "confederation": "CAF",
+    "team_rating": 35.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Saudi-Arabien",
+    "confederation": "AFC",
+    "team_rating": 73.0,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 3,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Schottland",
+    "confederation": "UEFA",
+    "team_rating": 74.2,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Schweden",
+    "confederation": "UEFA",
+    "team_rating": 73.5,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Schweiz",
+    "confederation": "UEFA",
+    "team_rating": 76.0,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Senegal",
+    "confederation": "CAF",
+    "team_rating": 69.2,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Serbien",
+    "confederation": "UEFA",
+    "team_rating": 72.7,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Seychellen",
+    "confederation": "CAF",
+    "team_rating": 38.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Sierra Leone",
+    "confederation": "CAF",
+    "team_rating": 44.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Simbabwe",
+    "confederation": "CAF",
+    "team_rating": 53.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Singapur",
+    "confederation": "AFC",
+    "team_rating": 55.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Sint Maarten",
+    "confederation": "CONCACAF",
+    "team_rating": 34.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Slowakei",
+    "confederation": "UEFA",
+    "team_rating": 67.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Slowenien",
+    "confederation": "UEFA",
+    "team_rating": 66.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Somalia",
+    "confederation": "CAF",
+    "team_rating": 32.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Spanien",
+    "confederation": "UEFA",
+    "team_rating": 86.1,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 4,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Sri Lanka",
+    "confederation": "AFC",
+    "team_rating": 41.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "St. Kitts und Nevis",
+    "confederation": "CONCACAF",
+    "team_rating": 44.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "St. Lucia",
+    "confederation": "CONCACAF",
+    "team_rating": 40.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "St. Martin",
+    "confederation": "CONCACAF",
+    "team_rating": 29.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "St. Vincent und die Grenadinen",
+    "confederation": "CONCACAF",
+    "team_rating": 41.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Südafrika",
+    "confederation": "CAF",
+    "team_rating": 68.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Sudan",
+    "confederation": "CAF",
+    "team_rating": 55.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Südkorea",
+    "confederation": "AFC",
+    "team_rating": 76.5,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 3,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Südsudan",
+    "confederation": "CAF",
+    "team_rating": 34.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Suriname",
+    "confederation": "CONCACAF",
+    "team_rating": 52.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Syrien",
+    "confederation": "AFC",
+    "team_rating": 57.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Tadschikistan",
+    "confederation": "AFC",
+    "team_rating": 49.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Taiwan",
+    "confederation": "AFC",
+    "team_rating": 48.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Tansania",
+    "confederation": "CAF",
+    "team_rating": 51.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Thailand",
+    "confederation": "AFC",
+    "team_rating": 62.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Togo",
+    "confederation": "CAF",
+    "team_rating": 49.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Tonga",
+    "confederation": "OFC",
+    "team_rating": 37.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Trinidad und Tobago",
+    "confederation": "CONCACAF",
+    "team_rating": 57.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "caribbean_cup": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Tschad",
+    "confederation": "CAF",
+    "team_rating": 36.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Tschechien",
+    "confederation": "UEFA",
+    "team_rating": 74.8,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Tunesien",
+    "confederation": "CAF",
+    "team_rating": 66.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Türkei",
+    "confederation": "UEFA",
+    "team_rating": 75.5,
+    "relevant_leagues": 3,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Turkmenistan",
+    "confederation": "AFC",
+    "team_rating": 48.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Tuvalu",
+    "confederation": "OFC",
+    "team_rating": 28.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Uganda",
+    "confederation": "CAF",
+    "team_rating": 56.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Ukraine",
+    "confederation": "UEFA",
+    "team_rating": 73.1,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 2
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Ungarn",
+    "confederation": "UEFA",
+    "team_rating": 70.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Uruguay",
+    "confederation": "CONMEBOL",
+    "team_rating": 76.8,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "USA",
+    "confederation": "CONCACAF",
+    "team_rating": 78.0,
+    "relevant_leagues": 2,
+    "club_competitions": {
+      "champions_cup": {
+        "direct_qualification": 5,
+        "qualification_rounds": 0
+      },
+      "mls": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Usbekistan",
+    "confederation": "AFC",
+    "team_rating": 64.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Vanuatu",
+    "confederation": "OFC",
+    "team_rating": 44.0,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Venezuela",
+    "confederation": "CONMEBOL",
+    "team_rating": 69.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "copa_libertadores": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "copa_sudamericana": {
+        "direct_qualification": 2,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Vereinigte Arabische Emirate",
+    "confederation": "AFC",
+    "team_rating": 67.0,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 2,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Vietnam",
+    "confederation": "AFC",
+    "team_rating": 58.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      },
+      "confederation_cup": {
+        "direct_qualification": 1,
+        "qualification_rounds": 0
+      }
+    }
+  },
+  {
+    "name": "Wales",
+    "confederation": "UEFA",
+    "team_rating": 70.8,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Zentralafrikanische Republik",
+    "confederation": "CAF",
+    "team_rating": 37.5,
+    "relevant_leagues": 0,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 0
+      },
+      "confederation_cup": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Zypern",
+    "confederation": "UEFA",
+    "team_rating": 66.5,
+    "relevant_leagues": 1,
+    "club_competitions": {
+      "champions_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_league": {
+        "direct_qualification": 0,
+        "qualification_rounds": 1
+      },
+      "europa_conference_league": {
+        "direct_qualification": 1,
+        "qualification_rounds": 1
+      }
+    }
+  },
+  {
+    "name": "Amerikanisch Samoa",
+    "confederation": "OFC",
+    "team_rating": 36.6,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Anguilla",
+    "confederation": "CONCACAF",
+    "team_rating": 30.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Äquatorialguinea",
+    "confederation": "CAF",
+    "team_rating": 52.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Bahamas",
+    "confederation": "CONCACAF",
+    "team_rating": 38.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Belize",
+    "confederation": "CONCACAF",
+    "team_rating": 44.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Kaimaninseln",
+    "confederation": "CONCACAF",
+    "team_rating": 40.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Cookinseln",
+    "confederation": "OFC",
+    "team_rating": 38.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Dominica",
+    "confederation": "CONCACAF",
+    "team_rating": 39.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Guam",
+    "confederation": "AFC",
+    "team_rating": 36.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Guatemala",
+    "confederation": "CONCACAF",
+    "team_rating": 60.0,
+    "relevant_leagues": 1
+  },
+  {
+    "name": "Jungferninseln (US)",
+    "confederation": "CONCACAF",
+    "team_rating": 32.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Jungferninseln (UK)",
+    "confederation": "CONCACAF",
+    "team_rating": 31.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Nordkorea",
+    "confederation": "AFC",
+    "team_rating": 56.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Liechtenstein",
+    "confederation": "UEFA",
+    "team_rating": 55.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Montserrat",
+    "confederation": "CONCACAF",
+    "team_rating": 33.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Nepal",
+    "confederation": "AFC",
+    "team_rating": 38.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Neukaledonien",
+    "confederation": "OFC",
+    "team_rating": 48.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Nicaragua",
+    "confederation": "CONCACAF",
+    "team_rating": 52.0,
+    "relevant_leagues": 1
+  },
+  {
+    "name": "Puerto Rico",
+    "confederation": "CONCACAF",
+    "team_rating": 46.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Tahiti",
+    "confederation": "OFC",
+    "team_rating": 50.0,
+    "relevant_leagues": 0
+  },
+  {
+    "name": "Turks und Caicosinseln",
+    "confederation": "CONCACAF",
+    "team_rating": 30.0,
+    "relevant_leagues": 0
+  }
+]

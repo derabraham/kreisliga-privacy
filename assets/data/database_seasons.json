@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "defaultSeasonId": "25",
+  "seasons": [
+    {
+      "id": "25",
+      "label": "25/26",
+      "startYear": 2025,
+      "startDate": "2025-07-01",
+      "clubsUrl": "assets/data/clubs.json",
+      "leaguesUrl": "assets/data/leagues.json",
+      "leagueFlowUrl": "assets/data/league_flow.json",
+      "legacy": true,
+      "labelKey": "databaseSeason.25.label"
+    },
+    {
+      "id": "26",
+      "label": "26/27",
+      "startYear": 2026,
+      "startDate": "2026-07-01",
+      "clubsUrl": "assets/data/26_clubs.json",
+      "leaguesUrl": "assets/data/26_leagues.json",
+      "leagueFlowUrl": "assets/data/26_league_flow.json",
+      "labelKey": "databaseSeason.26.label"
+    }
+  ]
+}

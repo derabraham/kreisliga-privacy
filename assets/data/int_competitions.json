@@ -1,0 +1,111 @@
+{
+  "UCL": {
+    "name": "Champions League",
+    "confederation": "UEFA",
+    "groupSize": 36,
+    "direct": 24,
+    "qualifyingRounds": [48, 24],
+    "nationSlots": { "directField": "uefa_cl_direct", "qualiField": "uefa_cl_quali" }
+  },
+"UEL": {
+  "name": "Europa League",
+  "confederation": "UEFA",
+  "groupSize": 36,
+  "direct": 12,
+  "qualifyingRounds": [48],
+  "nationSlots": { "directField": "uefa_el_direct", "qualiField": "uefa_el_quali" }
+},
+"UECL": {
+  "name": "Conference League",
+  "confederation": "UEFA",
+  "groupSize": 36,
+  "direct": 0,
+  "qualifyingRounds": [72],
+  "nationSlots": { "directField": "uefa_ecl_direct", "qualiField": "uefa_ecl_quali" }
+},
+
+  "AFC_CL": {
+    "name": "AFC Champions League Elite",
+    "confederation": "AFC",
+    "groupSize": 36,
+    "direct": 26,
+    "qualifyingRounds": [40, 20],
+    "nationSlots": { "directField": "afc_cl_direct", "qualiField": "afc_cl_quali" }
+  },
+  "AFC_CC": {
+    "name": "AFC Champions League 2",
+    "confederation": "AFC",
+    "groupSize": 36,
+    "direct": 29,
+    "qualifyingRounds": [14],
+    "nationSlots": { "directField": "afc_cc_direct", "qualiField": "afc_cc_quali" }
+  },
+  "AFC_CH": {
+    "name": "AFC Challenge League",
+    "confederation": "AFC",
+    "groupSize": 36,
+    "direct": 29,
+    "qualifyingRounds": [14],
+    "nationSlots": { "directField": "afc_ch_direct", "qualiField": "afc_ch_quali" }
+  },
+
+  "CAF_CL": {
+    "name": "CAF Champions League",
+    "confederation": "CAF",
+    "groupSize": 36,
+    "direct": 6,
+    "qualifyingRounds": [60],
+    "nationSlots": { "directField": "caf_cl_direct", "qualiField": "caf_cl_quali" }
+  },
+  "CAF_CC": {
+    "name": "CAF Confederation Cup",
+    "confederation": "CAF",
+    "groupSize": 36,
+    "direct": 28,
+    "qualifyingRounds": [32, 16],
+    "nationSlots": { "directField": "caf_cc_direct", "qualiField": "caf_cc_quali" }
+  },
+
+  "CON_CL": {
+    "name": "CONCACAF Champions League",
+    "confederation": "CONCACAF",
+    "groupSize": 36,
+    "direct": 18,
+    "qualifyingRounds": [36],
+    "nationSlots": { "directField": "con_cl_direct", "qualiField": "con_cl_quali" }
+  },
+  "CON_CC": {
+    "name": "CONCACAF Cup",
+    "confederation": "CONCACAF",
+    "groupSize": 36,
+    "direct": 25,
+    "qualifyingRounds": [22],
+    "nationSlots": { "directField": "con_cc_direct", "qualiField": "con_cc_quali" }
+  },
+
+  "SUD_CL": {
+    "name": "Copa Libertadores",
+    "confederation": "CONMEBOL",
+    "groupSize": 36,
+    "direct": 36,
+    "qualifyingRounds": [],
+    "nationSlots": { "directField": "sud_cl_direct", "qualiField": "sud_cl_quali" }
+  },
+  "SUD_CS": {
+    "name": "Copa Sudamericana",
+    "confederation": "CONMEBOL",
+    "groupSize": 36,
+    "direct": 36,
+    "qualifyingRounds": [],
+    "nationSlots": { "directField": "sud_cs_direct", "qualiField": "sud_cs_quali" }
+  },
+
+  "OFC_CL": {
+    "name": "OFC Champions League",
+    "confederation": "OFC",
+    "groupSize": 36,
+    "direct": 36,
+    "qualifyingRounds": [],
+    "nationSlots": { "directField": "ofc_cl_quali", "qualiField": "" }
+  }
+}
