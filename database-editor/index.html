@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Kreisliga Manager Database Studio</title>
+  <link rel="icon" type="image/png" href="../assets/kreisliga-logo.png">
+  <link rel="stylesheet" href="css/styles.css?v=20260822-12">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="../assets/kreisliga-logo.png" alt="KFM" class="brand-logo" id="brandLogo">
+        <div><strong>KFM Database Studio</strong><span>Desktop database editor</span></div>
+      </div>
+      <div class="database-chip" id="databaseChip"><span class="dot"></span><div><b id="dbName">No database loaded</b><small id="dbMeta">Open or create a database</small></div></div>
+      <div class="top-actions">
+        <button class="btn ghost" id="openOfficialBtn">Official database</button>
+        <button class="btn ghost" id="importBtn">Import .kfmdb</button>
+        <button class="btn ghost" id="metadataBtn" disabled>Database info</button>
+        <button class="btn primary" id="exportBtn" disabled>Export .kfmdb</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <button class="new-db" id="newDbBtn"><span>＋</span> New database</button>
+      <nav id="nav">
+        <button data-view="overview" class="active"><span>◫</span> Overview</button>
+        <button data-view="structure"><span>⌘</span> Structure</button>
+        <button data-view="players"><span>♙</span> Players <em class="nav-badge">Grid</em></button>
+        <button data-view="competitions"><span>★</span> Competitions</button>
+        <button data-view="validator"><span>◇</span> Validator</button>
+      </nav>
+      <div class="sidebar-help">
+        <b>Desktop workflow</b>
+        <span>Drill down through confederation → nation → level → league → club. Use the breadcrumb to jump back instantly.</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="view-head">
+        <div class="view-head-copy">
+          <nav class="breadcrumbs" id="breadcrumbs" aria-label="Database path"></nav>
+          <h1 id="viewTitle">Overview</h1>
+          <p id="viewSubtitle">Load an official database, import a .kfmdb file or start from scratch.</p>
+        </div>
+        <div id="viewActions" class="view-actions"></div>
+      </div>
+      <section id="content" class="content"></section>
+    </main>
+  </div>
+
+  <input id="kfmdbInput" type="file" accept=".kfmdb,application/zip,application/octet-stream" hidden>
+  <input id="jsonInput" type="file" accept=".json,application/json" hidden>
+  <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+  <input id="flagInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script type="module" src="js/app.js?v=20260822-12"></script>
+</body>
+</html>
