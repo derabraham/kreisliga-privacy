@@ -305,3 +305,7 @@ tr.selected td{background:#10283c!important}
   .review-change-row>[data-review-details]{grid-column:2;grid-row:1}
 }
 .review-change-accept input[type=checkbox]{width:16px;height:16px;min-width:16px;padding:0;margin:0;border-radius:4px}
+
+.validator-cleanup{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:12px}.validator-cleanup h3{margin:0 0 5px}.validator-cleanup p{margin:0;max-width:720px}.validator-cleanup-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.validator-cleanup-actions .muted{font-size:11px;white-space:nowrap}@media(max-width:900px){.validator-cleanup{align-items:stretch;flex-direction:column}.validator-cleanup-actions{justify-content:flex-start}}
+
+.validator-limit-note{padding:10px 12px;margin-bottom:6px;border:1px solid #2b4560;border-radius:9px;background:#0d1c2b;color:#9fb5c9;font-size:11px}

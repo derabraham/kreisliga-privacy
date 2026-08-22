@@ -605,7 +605,7 @@ function renderNationLevels() {
   const nation = state.db.data.nations.find(n => String(n.id) === String(state.structure.nationId));
   if (!nation) { structureGo('confederation', state.structure.confederation); return; }
   els.title.textContent = nationDisplayName(nation);
-  els.subtitle.textContent = 'League Level 1 is always available as a workbase. Additional levels are derived from the league data.';
+  els.subtitle.textContent = 'Select one or more league levels for bulk deletion. Deleting a level also removes its leagues, clubs and players.';
   els.actions.innerHTML = `<button class="btn" id="editNationTop" type="button">Edit nation</button><button class="btn primary" id="addLeagueTop" type="button">＋ Add league</button>`;
   const leagues = leaguesForNation(nation);
   const levels = [...new Set([1, ...leagues.map(l => Number(l.level || 1))])].sort((a, b) => a - b);
@@ -616,17 +616,25 @@ function renderNationLevels() {
     const clubs = state.db.data.clubs.filter(c => ids.has(String(c.leagueId || '')));
     const players = clubs.reduce((sum, c) => sum + playersForClub(c).length, 0);
     const regional = levelLeagues.some(l => l.region || l.association);
-    return { level, leagues: levelLeagues.length, clubs: clubs.length, players, structure: regional ? 'Regional' : 'National', regional };
+    return { id: `LEVEL:${nation.id}:${level}`, level, leagues: levelLeagues.length, clubs: clubs.length, players, structure: regional ? 'Regional' : 'National', regional };
   });
   visible = sortTableRows(sortScope, visible, (row, key) => ({ level: row.level, leagues: row.leagues, clubs: row.clubs, players: row.players, structure: row.structure })[key]);
+  const selectable = visible.filter(row => row.leagues > 0);
   const { rows, pages, start } = paginate(visible);
-  const body = rows.map(row => `<tr class="drill-row" data-open-level="${row.level}"><td><div class="entity-cell"><span class="level-badge">${row.level}</span><div><b>League Level ${row.level}</b><small>${row.regional ? 'Regional / association structure' : 'National structure'}</small></div></div></td><td>${row.leagues}</td><td>${row.clubs}</td><td>${row.players.toLocaleString()}</td><td>${row.regional ? '<span class="pill blue">Regional</span>' : '<span class="pill">National</span>'}</td></tr>`).join('');
-  els.content.innerHTML = searchToolbar('Search level or league…') + `<div class="table-wrap"><table class="directory-table"><thead><tr><th>${tableSortHeader(sortScope, 'level', 'Level')}</th><th>${tableSortHeader(sortScope, 'leagues', 'Leagues')}</th><th>${tableSortHeader(sortScope, 'clubs', 'Clubs')}</th><th>${tableSortHeader(sortScope, 'players', 'Players')}</th><th>${tableSortHeader(sortScope, 'structure', 'Structure')}</th></tr></thead><tbody>${body}</tbody></table></div>${pager(visible.length, pages, start)}`;
+  const allSelected = Boolean(selectable.length) && selectable.every(row => state.selected.has(String(row.id)));
+  const body = rows.map(row => {
+    const selected = state.selected.has(String(row.id));
+    const disabled = row.leagues < 1;
+    return `<tr class="drill-row ${selected ? 'selected' : ''}" data-open-level="${row.level}"><td class="select-col"><input type="checkbox" data-select-entity="${esc(row.id)}" ${selected ? 'checked' : ''} ${disabled ? 'disabled' : ''} aria-label="Select League Level ${row.level}"></td><td><div class="entity-cell"><span class="level-badge">${row.level}</span><div><b>League Level ${row.level}</b><small>${row.regional ? 'Regional / association structure' : 'National structure'}</small></div></div></td><td>${row.leagues}</td><td>${row.clubs}</td><td>${row.players.toLocaleString()}</td><td>${row.regional ? '<span class="pill blue">Regional</span>' : '<span class="pill">National</span>'}</td></tr>`;
+  }).join('');
+  els.content.innerHTML = searchToolbar('Search level or league…') + `<div class="table-wrap"><table class="directory-table"><thead><tr><th class="select-col"><input type="checkbox" id="selectAllEntities" ${allSelected ? 'checked' : ''} ${selectable.length ? '' : 'disabled'} aria-label="Select all league levels"></th><th>${tableSortHeader(sortScope, 'level', 'Level')}</th><th>${tableSortHeader(sortScope, 'leagues', 'Leagues')}</th><th>${tableSortHeader(sortScope, 'clubs', 'Clubs')}</th><th>${tableSortHeader(sortScope, 'players', 'Players')}</th><th>${tableSortHeader(sortScope, 'structure', 'Structure')}</th></tr></thead><tbody>${body}</tbody></table></div>${pager(visible.length, pages, start)}`;
   bindSearch();
   bindTableSort(sortScope);
+  bindEntitySelection(selectable, 'level');
   $('#editNationTop').addEventListener('click', () => editNation(nation.id, state.structure.confederation));
   $('#addLeagueTop').addEventListener('click', () => editLeague(null, nation, 1));
-  $$('[data-open-level]').forEach(row => row.addEventListener('click', () => structureGo('level', Number(row.dataset.openLevel))));
+  $$('[data-open-level]').forEach(row => row.addEventListener('click', event => { if (!event.target.closest('input')) structureGo('level', Number(row.dataset.openLevel)); }));
+  updateSelectionBar('level');
 }
 
 function renderLevelLeagues() {
@@ -657,10 +665,13 @@ function renderLevelLeagues() {
   $$('[data-delete-league]').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();
     const league = state.db.data.leagues.find(l => String(l.id) === String(button.dataset.deleteLeague));
-    if (!league || !confirm(`Delete ${league.name}? Clubs will keep an invalid reference until you move or delete them.`)) return;
-    state.db.data.leagues = state.db.data.leagues.filter(l => String(l.id) !== String(league.id));
+    if (!league) return;
+    const impact = cascadeImpactForLeagueIds(new Set([String(league.id)]));
+    if (!confirm(`Delete ${league.name}?\n\nThis also permanently removes ${impact.clubs.toLocaleString()} club${impact.clubs === 1 ? '' : 's'} and ${impact.players.toLocaleString()} player${impact.players === 1 ? '' : 's'} from this league.`)) return;
+    const removed = cascadeDeleteLeagueIds(new Set([String(league.id)]));
     state.selected.delete(String(league.id));
     dirty(); render();
+    toast(cascadeDeleteMessage(removed));
   }));
   updateSelectionBar('league');
 }
@@ -2168,6 +2179,120 @@ function handlePlayerPaste(event) {
   dirty(); toast(`${matrix.length} pasted row${matrix.length === 1 ? '' : 's'}.`); render();
 }
 
+function entityAssetPaths(entity) {
+  const out = new Set();
+  for (const key of ['logoAsset', 'flagAsset', 'faceAsset', 'imageAsset', 'customFacePath']) {
+    const path = String(entity?.[key] || '').trim().replace(/^\/+/, '');
+    if (path.startsWith('assets/') && !path.includes('..')) out.add(path);
+  }
+  return out;
+}
+
+function pruneDeletedEntityAssets(deletedEntities = []) {
+  const assets = state.db?.assets;
+  if (!assets?.size || !deletedEntities.length) return 0;
+  const candidates = new Set();
+  for (const entity of deletedEntities) for (const path of entityAssetPaths(entity)) candidates.add(path);
+  if (!candidates.size) return 0;
+  const referenced = new Set();
+  for (const key of ['confederations', 'nations', 'leagues', 'clubs', 'players', 'competitions']) {
+    for (const entity of state.db.data[key] || []) for (const path of entityAssetPaths(entity)) referenced.add(path);
+  }
+  let removed = 0;
+  for (const path of candidates) {
+    if (referenced.has(path) || !assets.has(path)) continue;
+    assets.delete(path);
+    const url = state.objectUrls.get(path);
+    if (url) { URL.revokeObjectURL(url); state.objectUrls.delete(path); }
+    removed++;
+  }
+  return removed;
+}
+
+function scrubDeletedLeaguesFromFlows(deletedLeagues = []) {
+  if (!deletedLeagues.length || !Array.isArray(state.db.data.leagueFlows)) return 0;
+  const names = new Set(deletedLeagues.map(l => String(l?.name || '').trim()).filter(Boolean));
+  if (!names.size) return 0;
+  let refs = 0;
+  for (const flow of state.db.data.leagueFlows) {
+    for (const [key, value] of Object.entries(flow || {})) {
+      if (!names.has(String(value || '').trim())) continue;
+      flow[key] = '0';
+      if (/^\d+$/.test(String(key)) && Object.prototype.hasOwnProperty.call(flow, `ANZ_${key}`)) flow[`ANZ_${key}`] = '0';
+      refs++;
+    }
+  }
+  return refs;
+}
+
+function cascadeImpactForLeagueIds(leagueIds) {
+  const ids = leagueIds instanceof Set ? leagueIds : new Set([...leagueIds || []].map(String));
+  const clubs = state.db.data.clubs.filter(c => ids.has(String(c.leagueId || '')));
+  const clubIds = new Set(clubs.map(c => String(c.id)));
+  const players = state.db.data.players.filter(p => clubIds.has(String(p.clubId || '')));
+  return { leagues: state.db.data.leagues.filter(l => ids.has(String(l.id))).length, clubs: clubs.length, players: players.length };
+}
+
+function cascadeDeleteLeagueIds(leagueIds) {
+  const ids = leagueIds instanceof Set ? new Set([...leagueIds].map(String)) : new Set([...leagueIds || []].map(String));
+  if (!ids.size) return { leagues: 0, clubs: 0, players: 0, assets: 0, flowRefs: 0 };
+  const deletedLeagues = state.db.data.leagues.filter(l => ids.has(String(l.id)));
+  const deletedClubs = state.db.data.clubs.filter(c => ids.has(String(c.leagueId || '')));
+  const clubIds = new Set(deletedClubs.map(c => String(c.id)));
+  const deletedPlayers = state.db.data.players.filter(p => clubIds.has(String(p.clubId || '')));
+  for (const p of deletedPlayers) markPlayerRemoved(p);
+  state.db.data.players = state.db.data.players.filter(p => !clubIds.has(String(p.clubId || '')));
+  state.db.data.clubs = state.db.data.clubs.filter(c => !ids.has(String(c.leagueId || '')));
+  state.db.data.leagues = state.db.data.leagues.filter(l => !ids.has(String(l.id)));
+  const flowRefs = scrubDeletedLeaguesFromFlows(deletedLeagues);
+  const assets = pruneDeletedEntityAssets([...deletedLeagues, ...deletedClubs, ...deletedPlayers]);
+  return { leagues: deletedLeagues.length, clubs: deletedClubs.length, players: deletedPlayers.length, assets, flowRefs };
+}
+
+function cascadeDeleteMessage(result) {
+  return `Deleted ${result.leagues.toLocaleString()} league${result.leagues === 1 ? '' : 's'}, ${result.clubs.toLocaleString()} club${result.clubs === 1 ? '' : 's'} and ${result.players.toLocaleString()} player${result.players === 1 ? '' : 's'}${result.assets ? ` · ${result.assets.toLocaleString()} unused embedded asset${result.assets === 1 ? '' : 's'} removed` : ''}.`;
+}
+
+function orphanClubsWithNoLeague() {
+  const leagueIds = new Set(state.db.data.leagues.map(l => String(l.id)));
+  const leagueNames = new Set(state.db.data.leagues.map(l => String(l.name || '').trim()).filter(Boolean));
+  return state.db.data.clubs.filter(c => {
+    const leagueId = String(c.leagueId || '').trim();
+    if (leagueId) return !leagueIds.has(leagueId);
+    const leagueName = String(c.league || '').trim();
+    return !leagueName || !leagueNames.has(leagueName);
+  });
+}
+
+function orphanPlayersWithMissingClub() {
+  const clubIds = new Set(state.db.data.clubs.map(c => String(c.id)));
+  return state.db.data.players.filter(p => {
+    const clubId = String(p.clubId || '').trim();
+    return Boolean(clubId) && !clubIds.has(clubId);
+  });
+}
+
+function removeOrphanClubsAndPlayers() {
+  const clubs = orphanClubsWithNoLeague();
+  const clubIds = new Set(clubs.map(c => String(c.id)));
+  const linkedPlayers = state.db.data.players.filter(p => clubIds.has(String(p.clubId || '')));
+  const playerIds = new Set(linkedPlayers.map(p => String(p.id)));
+  for (const p of linkedPlayers) markPlayerRemoved(p);
+  state.db.data.players = state.db.data.players.filter(p => !playerIds.has(String(p.id)));
+  state.db.data.clubs = state.db.data.clubs.filter(c => !clubIds.has(String(c.id)));
+  const assets = pruneDeletedEntityAssets([...clubs, ...linkedPlayers]);
+  return { clubs: clubs.length, players: playerIds.size, assets };
+}
+
+function removeOrphanPlayersOnly() {
+  const players = orphanPlayersWithMissingClub();
+  const ids = new Set(players.map(p => String(p.id)));
+  for (const p of players) markPlayerRemoved(p);
+  state.db.data.players = state.db.data.players.filter(p => !ids.has(String(p.id)));
+  const assets = pruneDeletedEntityAssets(players);
+  return { players: players.length, assets };
+}
+
 function bindEntitySelection(allItems, type) {
   const header = $('#selectAllEntities');
   const ids = allItems.map(item => String(item.id)).filter(Boolean);
@@ -2349,14 +2474,36 @@ function duplicateSelected(type) {
 
 function deleteSelected(type) {
   const count = state.selected.size;
-  if (!count || !confirm(`Delete ${count} selected ${type}${count === 1 ? '' : 's'}?`)) return;
+  if (!count) return;
   const ids = new Set([...state.selected].map(String));
-  if (type === 'player') { for (const p of state.db.data.players) if (ids.has(String(p.id))) markPlayerRemoved(p); state.db.data.players = state.db.data.players.filter(p => !ids.has(String(p.id))); }
+
+  if (type === 'level') {
+    const nation = state.db.data.nations.find(n => String(n.id) === String(state.structure.nationId));
+    if (!nation) return;
+    const levels = new Set([...ids].map(id => Number(String(id).split(':').pop())).filter(Number.isFinite));
+    const leagueIds = new Set(leaguesForNation(nation).filter(l => levels.has(Number(l.level || 1))).map(l => String(l.id)));
+    const impact = cascadeImpactForLeagueIds(leagueIds);
+    if (!impact.leagues) { state.selected.clear(); render(); return; }
+    if (!confirm(`Delete ${levels.size} selected league level${levels.size === 1 ? '' : 's'}?\n\nThis permanently removes ${impact.leagues.toLocaleString()} league${impact.leagues === 1 ? '' : 's'}, ${impact.clubs.toLocaleString()} club${impact.clubs === 1 ? '' : 's'} and ${impact.players.toLocaleString()} player${impact.players === 1 ? '' : 's'}.`)) return;
+    const removed = cascadeDeleteLeagueIds(leagueIds);
+    state.selected.clear(); dirty(); render(); toast(cascadeDeleteMessage(removed));
+    return;
+  }
+
+  if (type === 'league') {
+    const impact = cascadeImpactForLeagueIds(ids);
+    if (!confirm(`Delete ${count} selected league${count === 1 ? '' : 's'}?\n\nThis permanently removes their ${impact.clubs.toLocaleString()} club${impact.clubs === 1 ? '' : 's'} and ${impact.players.toLocaleString()} player${impact.players === 1 ? '' : 's'} as well.`)) return;
+    const removed = cascadeDeleteLeagueIds(ids);
+    state.selected.clear(); dirty(); render(); toast(cascadeDeleteMessage(removed));
+    return;
+  }
+
+  if (!confirm(`Delete ${count} selected ${type}${count === 1 ? '' : 's'}?`)) return;
+  if (type === 'player') { for (const p of state.db.data.players) if (ids.has(String(p.id))) markPlayerRemoved(p); const deleted = state.db.data.players.filter(p => ids.has(String(p.id))); state.db.data.players = state.db.data.players.filter(p => !ids.has(String(p.id))); pruneDeletedEntityAssets(deleted); }
   else if (type === 'club') {
     state.db.data.clubs = state.db.data.clubs.filter(c => !ids.has(String(c.id)));
     for (const p of state.db.data.players) if (ids.has(String(p.clubId))) { p.clubId = ''; p.clubName = ''; }
-  } else if (type === 'league') state.db.data.leagues = state.db.data.leagues.filter(l => !ids.has(String(l.id)));
-  else if (type === 'nation') state.db.data.nations = state.db.data.nations.filter(n => !ids.has(String(n.id)));
+  } else if (type === 'nation') state.db.data.nations = state.db.data.nations.filter(n => !ids.has(String(n.id)));
   state.selected.clear(); dirty(); render(); toast(`${count} deleted.`);
 }
 
@@ -2515,11 +2662,34 @@ function renderCompetitions() {
 
 function renderValidator() {
   els.title.textContent = 'Validator';
-  els.subtitle.textContent = 'Inspect broken references, duplicate IDs and structural warnings.';
+  els.subtitle.textContent = 'Inspect broken references, duplicate IDs and structural warnings. Cleanup actions delete orphaned records permanently.';
   const issues = validate(state.db.data); const errors = issues.filter(x => x.severity === 'error').length; const warns = issues.length - errors;
+  const visibleIssues = issues.slice(0, 1000);
+  const hiddenIssueCount = Math.max(0, issues.length - visibleIssues.length);
+  const orphanClubs = orphanClubsWithNoLeague();
+  const orphanClubIds = new Set(orphanClubs.map(c => String(c.id)));
+  const playersInOrphanClubs = state.db.data.players.filter(p => orphanClubIds.has(String(p.clubId || '')));
+  const orphanPlayers = orphanPlayersWithMissingClub().filter(p => !orphanClubIds.has(String(p.clubId || '')));
   els.actions.innerHTML = '<button class="btn" id="rerun" type="button">Run again</button>';
-  els.content.innerHTML = `<div class="validator-summary"><div class="validator-badge"><b>${errors}</b> Errors</div><div class="validator-badge"><b>${warns}</b> Warnings</div><div class="validator-badge"><b>${issues.length}</b> Total issues</div></div><div class="card">${issues.length ? issues.map(i => `<div class="issue ${esc(i.severity)}"><b class="sev">${esc(i.severity.toUpperCase())}</b><span>${esc(i.type)}</span><span>${esc(i.message)}</span><span></span></div>`).join('') : '<div class="empty-state validator-empty"><div><div class="symbol">✓</div><h2>No structural issues found</h2><p>The database passed the web editor reference and identity checks.</p></div></div>'}</div>`;
+  const cleanup = (orphanClubs.length || orphanPlayers.length) ? `<div class="card validator-cleanup"><div><h3>Cleanup broken references</h3><p class="muted">Useful after deleting old leagues with an earlier editor version. Removing a team with no valid league also removes every player still assigned to that team.</p></div><div class="validator-cleanup-actions">${orphanClubs.length ? `<button class="btn danger" id="removeNoLeagueTeams" type="button">Remove ${orphanClubs.length.toLocaleString()} Teams with no League</button><span class="muted">+ ${playersInOrphanClubs.length.toLocaleString()} linked players</span>` : ''}${orphanPlayers.length ? `<button class="btn danger" id="removeOrphanPlayers" type="button">Remove ${orphanPlayers.length.toLocaleString()} Players with missing Club</button>` : ''}</div></div>` : '';
+  els.content.innerHTML = `<div class="validator-summary"><div class="validator-badge"><b>${errors}</b> Errors</div><div class="validator-badge"><b>${warns}</b> Warnings</div><div class="validator-badge"><b>${issues.length}</b> Total issues</div></div>${cleanup}<div class="card">${issues.length ? `${hiddenIssueCount ? `<div class="validator-limit-note">Showing the first ${visibleIssues.length.toLocaleString()} issues for performance. ${hiddenIssueCount.toLocaleString()} more issue${hiddenIssueCount === 1 ? '' : 's'} are still included in the totals above.</div>` : ''}${visibleIssues.map(i => `<div class="issue ${esc(i.severity)}"><b class="sev">${esc(i.severity.toUpperCase())}</b><span>${esc(i.type)}</span><span>${esc(i.message)}</span><span></span></div>`).join('')}` : '<div class="empty-state validator-empty"><div><div class="symbol">✓</div><h2>No structural issues found</h2><p>The database passed the web editor reference and identity checks.</p></div></div>'}</div>`;
   $('#rerun').addEventListener('click', render);
+  $('#removeNoLeagueTeams')?.addEventListener('click', () => {
+    const clubs = orphanClubsWithNoLeague();
+    const clubIds = new Set(clubs.map(c => String(c.id)));
+    const linked = state.db.data.players.filter(p => clubIds.has(String(p.clubId || ''))).length;
+    if (!confirm(`Remove ${clubs.length.toLocaleString()} team${clubs.length === 1 ? '' : 's'} with no valid league?\n\nThis also permanently removes ${linked.toLocaleString()} player${linked === 1 ? '' : 's'} assigned to those teams.`)) return;
+    const removed = removeOrphanClubsAndPlayers();
+    dirty(); render();
+    toast(`Removed ${removed.clubs.toLocaleString()} orphaned club${removed.clubs === 1 ? '' : 's'} and ${removed.players.toLocaleString()} player${removed.players === 1 ? '' : 's'}${removed.assets ? ` · ${removed.assets.toLocaleString()} unused embedded asset${removed.assets === 1 ? '' : 's'} removed` : ''}.`);
+  });
+  $('#removeOrphanPlayers')?.addEventListener('click', () => {
+    const players = orphanPlayersWithMissingClub();
+    if (!players.length || !confirm(`Remove ${players.length.toLocaleString()} player${players.length === 1 ? '' : 's'} that point to clubs which no longer exist?`)) return;
+    const removed = removeOrphanPlayersOnly();
+    dirty(); render();
+    toast(`Removed ${removed.players.toLocaleString()} orphaned player${removed.players === 1 ? '' : 's'}${removed.assets ? ` · ${removed.assets.toLocaleString()} unused embedded asset${removed.assets === 1 ? '' : 's'} removed` : ''}.`);
+  });
 }
 
 
