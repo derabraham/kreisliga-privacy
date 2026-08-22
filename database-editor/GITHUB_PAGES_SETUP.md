@@ -66,3 +66,13 @@ The breadcrumb is kept on one compact, horizontally scrollable line. Club squads
 ## JSZip
 
 The editor currently loads JSZip from jsDelivr. It can be self-hosted later by replacing the CDN script in `database-editor/index.html` with a local copy.
+
+## Player data packs when cloning an official database
+
+The web editor can now mirror the in-game **Resolve compatible player packs into the new custom database** workflow.
+
+The browser cannot read which packs are installed inside the Android app. Instead, `.github/workflows/pages.yml` downloads the current public KFM player-pack JSON files from the `derabraham/player-databases` GitHub Release into `assets/player-packs/` **only for the deployed Pages artifact**. They do not need to be committed to the website repository.
+
+When you open **Official database** in Database Studio, a compatible season shows the checkbox **Resolve compatible player packs into the copy**. If selected, the browser loads the compatible pack JSONs, maps their players to the clubs in that official season and embeds the resolved player rows directly into the new custom database. The exported `.kfmdb` is therefore self-contained and does not require those packs to be installed later on the phone.
+
+Current legacy pack definitions are compatible with database season `25` (25/26), matching the current mobile-app fallback behavior. A season with no compatible packs shows the option disabled.

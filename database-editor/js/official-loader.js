@@ -1,4 +1,5 @@
-import{clone,deriveConfederations,ensureIds,emptyData}from'./core.js?v=20260822-12';
+import{clone,deriveConfederations,ensureIds,emptyData}from'./core.js?v=20260822-15';
+import{resolveCompatiblePlayerPacks}from'./player-packs.js?v=20260822-15';
 
 // The editor lives in /database-editor/, while the website already has a shared
 // /assets folder. Resolve official KFM JSON paths against the website root so
@@ -73,7 +74,7 @@ export async function loadReferenceScaffold(){
   return data;
 }
 
-export async function loadOfficial(entry){
+export async function loadOfficial(entry, options={}){
   const nations=await json('assets/data/nations.json');
   const [clubs,leagues,leagueFlows,players,comps]=await Promise.all([
     json(entry.clubsUrl),json(entry.leaguesUrl),json(entry.leagueFlowUrl),
@@ -82,6 +83,30 @@ export async function loadOfficial(entry){
   const databaseId=`user:web-${entry.id}-${crypto.randomUUID?.()||Date.now()}`;
   const data=emptyData();
   Object.assign(data,{confederations:deriveConfederations(nations),nations:clone(nations),leagues:clone(leagues),leagueFlows:clone(leagueFlows),clubs:clone(clubs),players:Array.isArray(players)?clone(players):[],competitions:comps,metadata:{databaseId,databaseSeasonId:String(entry.id),startDate:entry.startDate,startYear:entry.startYear,templateDatabaseId:`official:${entry.id}`,schemaVersion:1}});
+  ensureIds(data,databaseId);
+
+  if(options.resolvePlayerPacks===true){
+    const resolved=await resolveCompatiblePlayerPacks({
+      databaseSeasonId:String(entry.id),
+      revisionId:entry.revisionId||entry.currentRevisionId||null,
+      clubs:data.clubs,
+      onProgress:options.onPackProgress||null
+    });
+    const byId=new Map();
+    for(const player of data.players||[]){const id=String(player?.id||'').trim();if(id)byId.set(id,player)}
+    for(const player of resolved.players||[]){const id=String(player?.id||'').trim();if(id)byId.set(id,player)}
+    data.players=[...byId.values()];
+    data.metadata={
+      ...(data.metadata||{}),
+      playerPackMode:'self-contained',
+      resolvedPlayerPackIds:(resolved.packs||[]).map(pack=>pack.id),
+      resolvedPlayerPacks:clone(resolved.packs||[]),
+      resolvedPlayerPackPlayerCount:Number(resolved.players?.length||0),
+      resolvedPlayerPackSkippedPlayers:Number(resolved.skippedPlayers||0),
+      resolvedPlayerPacksAt:new Date().toISOString()
+    };
+  }
+
   ensureIds(data,databaseId);
   return{manifest:{databaseId,displayName:`${entry.label} — Web Copy`,version:'1.0.0',author:'',description:`Editable web copy of the official ${entry.label} database.`,startDate:entry.startDate,databaseSeasonId:String(entry.id),templateDatabaseId:`official:${entry.id}`,tags:['Custom']},data,assets:new Map(),source:'official'};
 }

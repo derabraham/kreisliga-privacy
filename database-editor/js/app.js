@@ -1,9 +1,10 @@
 import {
   emptyData, ensureIds, makeId, indexes, validate, ratingClass, esc,
   POSITIONS, FEET, download, leagueNation
-} from './core.js?v=20260822-12';
-import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-12';
-import { listOfficial, loadOfficial, loadReferenceScaffold } from './official-loader.js?v=20260822-12';
+} from './core.js?v=20260822-15';
+import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-15';
+import { listOfficial, loadOfficial, loadReferenceScaffold } from './official-loader.js?v=20260822-15';
+import { compatiblePlayerPacks } from './player-packs.js?v=20260822-15';
 
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
@@ -1959,11 +1960,48 @@ function renderValidator() {
 async function openOfficial() {
   try {
     const list = await listOfficial();
-    modal('Create from official database', `<div class="source-options">${list.map(x => `<div class="source-card" data-season="${esc(x.id)}"><strong>${esc(x.label)}</strong><span>${esc(x.startDate || '')} · creates an editable standalone copy</span></div>`).join('')}</div>`);
-    $$('[data-season]', els.modal).forEach(card => card.addEventListener('click', async () => {
-      const entry = list.find(x => String(x.id) === String(card.dataset.season)); closeModal(); toast(`Loading ${entry.label}…`);
-      try { setDb(await loadOfficial(entry)); toast(`${entry.label} loaded as an editable copy.`); }
-      catch (error) { toast(`Could not load official data: ${error.message}`, 'error'); }
+    const packCounts = new Map();
+    await Promise.all(list.map(async entry => {
+      try { packCounts.set(String(entry.id), (await compatiblePlayerPacks(entry.id, entry.revisionId || null)).length); }
+      catch (_) { packCounts.set(String(entry.id), 0); }
+    }));
+    modal('Create from official database', `<div class="source-options">${list.map(x => {
+      const packCount = Number(packCounts.get(String(x.id)) || 0);
+      return `<div class="source-card source-card-rich">
+        <div class="source-card-copy"><strong>${esc(x.label)}</strong><span>${esc(x.startDate || '')} · creates an editable standalone copy</span></div>
+        <label class="pack-resolve-option ${packCount ? '' : 'disabled'}">
+          <input type="checkbox" data-resolve-packs="${esc(x.id)}" ${packCount ? '' : 'disabled'}>
+          <span><b>Resolve compatible player packs into the copy</b><small>${packCount ? `${packCount} compatible pack${packCount === 1 ? '' : 's'} available. Players are embedded into the custom database.` : 'No compatible player packs are available for this database season.'}</small></span>
+        </label>
+        <div class="source-card-actions"><button class="btn primary" data-load-season="${esc(x.id)}" type="button">Create editable copy</button></div>
+      </div>`;
+    }).join('')}</div>`);
+    $$('[data-load-season]', els.modal).forEach(button => button.addEventListener('click', async () => {
+      const entry = list.find(x => String(x.id) === String(button.dataset.loadSeason));
+      if (!entry) return;
+      const resolvePacks = Boolean($(`[data-resolve-packs="${CSS.escape(String(entry.id))}"]`, els.modal)?.checked);
+      button.disabled = true;
+      button.textContent = resolvePacks ? 'Resolving player packs…' : 'Loading…';
+      toast(resolvePacks ? `Loading ${entry.label} and resolving compatible player packs…` : `Loading ${entry.label}…`);
+      try {
+        const db = await loadOfficial(entry, {
+          resolvePlayerPacks: resolvePacks,
+          onPackProgress: info => {
+            if (!resolvePacks || !info?.pack) return;
+            const current = Math.max(1, Number(info.index || 0) + (info.stage === 'resolved' ? 0 : 1));
+            button.textContent = `Pack ${Math.min(current, info.total || current)}/${info.total || '?'} · ${info.pack.name}`;
+          }
+        });
+        closeModal();
+        setDb(db);
+        const count = Number(db.data?.metadata?.resolvedPlayerPackPlayerCount || 0);
+        const packs = Number(db.data?.metadata?.resolvedPlayerPackIds?.length || 0);
+        toast(resolvePacks ? `${entry.label} copied with ${count.toLocaleString()} players from ${packs} compatible player packs.` : `${entry.label} loaded as an editable copy.`);
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = 'Create editable copy';
+        toast(`Could not load official data: ${error.message}`, 'error');
+      }
     }));
   } catch (error) { toast(`Official database catalog not found. Copy the game JSON files into assets/data. ${error.message}`, 'error'); }
 }

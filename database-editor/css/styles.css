@@ -236,3 +236,13 @@ tr.selected td{background:#10283c!important}
   background:rgba(31,157,214,.10);
   border-color:rgba(74,194,239,.28);
 }
+
+
+/* v15: official-database clone + player-pack resolution */
+.source-card-rich{cursor:default;display:grid;gap:12px}.source-card-rich:hover{border-color:var(--line)}
+.source-card-copy strong,.source-card-copy span{display:block}.source-card-copy span{color:var(--muted);font-size:11px;margin-top:4px}
+.pack-resolve-option{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #20384e;border-radius:10px;background:#081522;cursor:pointer}
+.pack-resolve-option:hover{border-color:#356d91}.pack-resolve-option.disabled{opacity:.5;cursor:not-allowed}.pack-resolve-option input{margin-top:2px;flex:0 0 auto}
+.pack-resolve-option>span{display:block;min-width:0}.pack-resolve-option b{display:block;color:#ddecff;font-size:12px}.pack-resolve-option small{display:block;color:var(--muted);font-size:10px;line-height:1.45;margin-top:3px}
+.source-card-actions{display:flex;justify-content:flex-end}.source-card-actions .btn{min-width:170px}
+@media(max-width:760px){.source-options{grid-template-columns:1fr}}
