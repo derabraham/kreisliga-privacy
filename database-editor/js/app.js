@@ -1,12 +1,12 @@
 import {
   emptyData, ensureIds, makeId, indexes, validate, ratingClass, esc,
   POSITIONS, FEET, download, leagueNation, additionalPlayerGenerationMode, shouldGenerateAdditionalPlayers, ADDITIONAL_PLAYER_AUTO_THRESHOLD
-} from './core.js?v=20260822-21';
-import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-21';
-import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-21';
-import { compatiblePlayerPacks } from './player-packs.js?v=20260822-21';
-import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-21';
-import { createContributionWorkspace, buildContributionChanges, validateContribution, exportContribution, importContribution, reviewContribution, applyReviewedChanges, trackedContributionHash, noteContributionMutation, contributionChangeSummary } from './contributions.js?v=20260822-21';
+} from './core.js?v=20260822-22';
+import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-22';
+import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-22';
+import { compatiblePlayerPacks } from './player-packs.js?v=20260822-22';
+import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-22';
+import { createContributionWorkspace, buildContributionChanges, validateContribution, exportContribution, importContribution, reviewContribution, applyReviewedChanges, trackedContributionHash, noteContributionMutation, contributionChangeSummary } from './contributions.js?v=20260822-22';
 
 
 const $ = (s, root = document) => root.querySelector(s);
@@ -26,6 +26,9 @@ const state = {
   flagTarget: null,
   pendingNationFlag: null,
   flags: [],
+  flagLookupMap: new Map(),
+  nationDisplayCache: new Map(),
+  nationUiCache: null,
   objectUrls: new Map(),
   clubEditors: [],
   contribution: null,
@@ -180,6 +183,8 @@ function setDb(db) {
   state.db = db;
   state.dataRevision += 1;
   state.indexCache = null;
+  state.nationDisplayCache = new Map();
+  state.nationUiCache = null;
   ensureIds(db.data, db.manifest.databaseId);
   ensureDatabaseSettings(db.data, Number(db.data?.metadata?.startYear || String(db.manifest?.startDate||'2026').slice(0,4) || 2026));
   // Keep legacy saves compatible while presenting only the position set used by
@@ -214,6 +219,8 @@ function dirty() {
   state.db.dirty = true;
   state.dataRevision += 1;
   state.indexCache = null;
+  state.nationDisplayCache = new Map();
+  state.nationUiCache = null;
   if (state.contribution) state.contribution._cachedRevision = null;
   els.dbMeta.textContent = `Unsaved changes · ${state.db.data.clubs.length.toLocaleString()} clubs · ${state.db.data.players.length.toLocaleString()} players`;
 }
@@ -413,15 +420,15 @@ function searchToolbar(label, extras = '') {
   return `<div class="toolbar"><div class="search"><input id="searchInput" placeholder="${esc(label)}" value="${esc(state.search)}"></div>${extras}</div>`;
 }
 
-function paginate(list) {
-  const pages = Math.max(1, Math.ceil(list.length / state.pageSize));
+function paginate(list, pageSize = state.pageSize) {
+  const pages = Math.max(1, Math.ceil(list.length / pageSize));
   state.page = Math.min(state.page, pages);
-  const start = (state.page - 1) * state.pageSize;
-  return { rows: list.slice(start, start + state.pageSize), pages, start };
+  const start = (state.page - 1) * pageSize;
+  return { rows: list.slice(start, start + pageSize), pages, start, pageSize };
 }
 
-function pager(total, pages, start) {
-  return `<div class="pager"><span>${total ? `${start + 1}-${Math.min(start + state.pageSize, total)} / ${total}` : '0 entries'}</span><div class="pager-controls"><button class="btn small" data-page="prev" ${state.page <= 1 ? 'disabled' : ''} type="button">‹</button><span>${state.page} / ${pages}</span><button class="btn small" data-page="next" ${state.page >= pages ? 'disabled' : ''} type="button">›</button></div></div>`;
+function pager(total, pages, start, pageSize = state.pageSize) {
+  return `<div class="pager"><span>${total ? `${start + 1}-${Math.min(start + pageSize, total)} / ${total}` : '0 entries'}</span><div class="pager-controls"><button class="btn small" data-page="prev" ${state.page <= 1 ? 'disabled' : ''} type="button">‹</button><span>${state.page} / ${pages}</span><button class="btn small" data-page="next" ${state.page >= pages ? 'disabled' : ''} type="button">›</button></div></div>`;
 }
 
 function bindSearch() {
@@ -1078,6 +1085,271 @@ function flagLookupKey(value) {
     .replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+
+const GAME_NATION_TRANSLATIONS = Object.freeze({
+  "afghanistan": "Afghanistan",
+  "agypten": "Egypt",
+  "albanien": "Albania",
+  "algerien": "Algeria",
+  "andorra": "Andorra",
+  "angola": "Angola",
+  "antigua_und_barbuda": "Antigua and Barbuda",
+  "argentinien": "Argentina",
+  "armenien": "Armenia",
+  "aruba": "Aruba",
+  "aserbaidschan": "Azerbaijan",
+  "athiopien": "Ethiopia",
+  "australien": "Australia",
+  "bahrain": "Bahrain",
+  "bangladesch": "Bangladesh",
+  "barbados": "Barbados",
+  "belarus": "Belarus",
+  "belgien": "Belgium",
+  "benin": "Benin",
+  "bermuda": "Bermuda",
+  "bhutan": "Bhutan",
+  "bolivien": "Bolivia",
+  "bonaire": "Bonaire",
+  "bosnien_und_herzegowina": "Bosnia and Herzegovina",
+  "botswana": "Botswana",
+  "brasilien": "Brazil",
+  "brunei": "Brunei",
+  "bulgarien": "Bulgaria",
+  "burkina_faso": "Burkina Faso",
+  "burundi": "Burundi",
+  "chile": "Chile",
+  "china": "China",
+  "costa_rica": "Costa Rica",
+  "curacao": "Curaçao",
+  "danemark": "Denmark",
+  "demokratische_republik_kongo": "Democratic Republic of the Congo",
+  "deutschland": "Germany",
+  "dominikanische_republik": "Dominican Republic",
+  "dschibuti": "Djibouti",
+  "ecuador": "Ecuador",
+  "el_salvador": "El Salvador",
+  "elfenbeinkuste": "Ivory Coast",
+  "england": "England",
+  "eritrea": "Eritrea",
+  "estland": "Estonia",
+  "eswatini": "Eswatini",
+  "faroer_inseln": "Faroe Islands",
+  "fidschi": "Fiji",
+  "finnland": "Finland",
+  "frankreich": "France",
+  "gabun": "Gabon",
+  "gambia": "Gambia",
+  "georgien": "Georgia",
+  "ghana": "Ghana",
+  "gibraltar": "Gibraltar",
+  "grenada": "Grenada",
+  "griechenland": "Greece",
+  "guinea": "Guinea",
+  "guinea_bissau": "Guinea-Bissau",
+  "guyana": "Guyana",
+  "haiti": "Haiti",
+  "honduras": "Honduras",
+  "hongkong": "Hong Kong",
+  "indien": "India",
+  "indonesien": "Indonesia",
+  "irak": "Iraq",
+  "iran": "Iran",
+  "irland": "Ireland",
+  "island": "Iceland",
+  "israel": "Israel",
+  "italien": "Italy",
+  "jamaika": "Jamaica",
+  "japan": "Japan",
+  "jemen": "Yemen",
+  "jordanien": "Jordan",
+  "kambodscha": "Cambodia",
+  "kamerun": "Cameroon",
+  "kanada": "Canada",
+  "kap_verde": "Cape Verde",
+  "kasachstan": "Kazakhstan",
+  "katar": "Qatar",
+  "kenia": "Kenya",
+  "kirgisistan": "Kyrgyzstan",
+  "kolumbien": "Colombia",
+  "komoren": "Comoros",
+  "kosovo": "Kosovo",
+  "kroatien": "Croatia",
+  "kuba": "Cuba",
+  "kuwait": "Kuwait",
+  "laos": "Laos",
+  "lesotho": "Lesotho",
+  "lettland": "Latvia",
+  "libanon": "Lebanon",
+  "liberia": "Liberia",
+  "libyen": "Libya",
+  "litauen": "Lithuania",
+  "luxemburg": "Luxembourg",
+  "macau": "Macau",
+  "madagaskar": "Madagascar",
+  "malawi": "Malawi",
+  "malaysia": "Malaysia",
+  "malediven": "Maldives",
+  "mali": "Mali",
+  "malta": "Malta",
+  "marokko": "Morocco",
+  "mauretanien": "Mauritania",
+  "mauritius": "Mauritius",
+  "mexiko": "Mexico",
+  "mikronesien": "Micronesia",
+  "moldau": "Moldova",
+  "mongolei": "Mongolia",
+  "montenegro": "Montenegro",
+  "mosambik": "Mozambique",
+  "myanmar": "Myanmar",
+  "namibia": "Namibia",
+  "neuseeland": "New Zealand",
+  "niederlande": "Netherlands",
+  "niger": "Niger",
+  "nigeria": "Nigeria",
+  "nordirland": "Northern Ireland",
+  "nordmazedonien": "North Macedonia",
+  "norwegen": "Norway",
+  "oman": "Oman",
+  "osterreich": "Austria",
+  "osttimor": "East Timor",
+  "pakistan": "Pakistan",
+  "panama": "Panama",
+  "palastina": "Palestine",
+  "papua_neuguinea": "Papua New Guinea",
+  "paraguay": "Paraguay",
+  "peru": "Peru",
+  "philippinen": "Philippines",
+  "polen": "Poland",
+  "portugal": "Portugal",
+  "republik_kongo": "Republic of the Congo",
+  "ruanda": "Rwanda",
+  "rumanien": "Romania",
+  "russland": "Russia",
+  "saint_barthelemy": "Saint Barthélemy",
+  "salomonen": "Solomon Islands",
+  "sambia": "Zambia",
+  "samoa": "Samoa",
+  "san_marino": "San Marino",
+  "sansibar": "Zanzibar",
+  "sao_tome_principe": "São Tomé & Príncipe",
+  "saudi_arabien": "Saudi Arabia",
+  "schottland": "Scotland",
+  "schweden": "Sweden",
+  "schweiz": "Switzerland",
+  "senegal": "Senegal",
+  "serbien": "Serbia",
+  "seychellen": "Seychelles",
+  "sierra_leone": "Sierra Leone",
+  "simbabwe": "Zimbabwe",
+  "singapur": "Singapore",
+  "sint_maarten": "Sint Maarten",
+  "slowakei": "Slovakia",
+  "slowenien": "Slovenia",
+  "somalia": "Somalia",
+  "spanien": "Spain",
+  "sri_lanka": "Sri Lanka",
+  "st_kitts_und_nevis": "St. Kitts and Nevis",
+  "st_lucia": "St. Lucia",
+  "st_martin": "St. Martin",
+  "st_vincent_und_die_grenadinen": "St. Vincent and the Grenadines",
+  "sudafrika": "South Africa",
+  "sudan": "Sudan",
+  "sudkorea": "South Korea",
+  "sudsudan": "South Sudan",
+  "suriname": "Suriname",
+  "syrien": "Syria",
+  "tadschikistan": "Tajikistan",
+  "taiwan": "Taiwan",
+  "tansania": "Tanzania",
+  "thailand": "Thailand",
+  "togo": "Togo",
+  "tonga": "Tonga",
+  "trinidad_und_tobago": "Trinidad and Tobago",
+  "tschad": "Chad",
+  "tschechien": "Czech Republic",
+  "tunesien": "Tunisia",
+  "turkei": "Turkey",
+  "turkmenistan": "Turkmenistan",
+  "tuvalu": "Tuvalu",
+  "uganda": "Uganda",
+  "ukraine": "Ukraine",
+  "ungarn": "Hungary",
+  "uruguay": "Uruguay",
+  "usa": "USA",
+  "usbekistan": "Uzbekistan",
+  "vanuatu": "Vanuatu",
+  "venezuela": "Venezuela",
+  "vereinigte_arabische_emirate": "United Arab Emirates",
+  "vietnam": "Vietnam",
+  "wales": "Wales",
+  "zentralafrikanische_republik": "Central African Republic",
+  "zypern": "Cyprus",
+  "amerikanisch_samoa": "American Samoa",
+  "anguilla": "Anguilla",
+  "aquatorialguinea": "Equatorial Guinea",
+  "bahamas": "Bahamas",
+  "belize": "Belize",
+  "kaimaninseln": "Cayman Islands",
+  "cookinseln": "Cook Islands",
+  "dominica": "Dominica",
+  "guam": "Guam",
+  "guatemala": "Guatemala",
+  "jungferninseln_us": "US Virgin Islands",
+  "jungferninseln_uk": "British Virgin Islands",
+  "nordkorea": "North Korea",
+  "liechtenstein": "Liechtenstein",
+  "montserrat": "Montserrat",
+  "nepal": "Nepal",
+  "neukaledonien": "New Caledonia",
+  "nicaragua": "Nicaragua",
+  "puerto_rico": "Puerto Rico",
+  "tahiti": "Tahiti",
+  "turks_und_caicosinseln": "Turks and Caicos Islands"
+});
+
+function gameNationKey(value) {
+  return String(value || '')
+    .replace(/^nation[._\s-]+/i, '').replace(/_/g, ' ')
+    .trim().toLowerCase()
+    .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+const GAME_NATION_TRANSLATION_LOOKUP = (() => {
+  const map = new Map();
+  for (const [key, label] of Object.entries(GAME_NATION_TRANSLATIONS)) {
+    map.set(gameNationKey(key), label);
+    map.set(gameNationKey(label), label);
+  }
+  const aliases = {
+    'czech': 'Czech Republic', 'czechia': 'Czech Republic',
+    'cote d ivoire': 'Ivory Coast', 'côte d’ivoire': 'Ivory Coast', 'cote divoire': 'Ivory Coast',
+    'turkiye': 'Turkey', 'türkiye': 'Turkey',
+    'united states': 'USA', 'united states of america': 'USA',
+    'timor leste': 'East Timor', 'cabo verde': 'Cape Verde',
+    'palestinian territories': 'Palestine', 'palestinian territory': 'Palestine',
+    'hong kong sar china': 'Hong Kong', 'macao sar china': 'Macau', 'macao': 'Macau',
+    'congo kinshasa': 'Democratic Republic of the Congo', 'dr congo': 'Democratic Republic of the Congo',
+    'congo brazzaville': 'Republic of the Congo', 'republic of congo': 'Republic of the Congo',
+    'korea republic': 'South Korea', 'republic of korea': 'South Korea',
+    'korea democratic peoples republic': 'North Korea', 'democratic peoples republic of korea': 'North Korea'
+  };
+  for (const [alias, label] of Object.entries(aliases)) map.set(gameNationKey(alias), label);
+  return map;
+})();
+
+const GAME_NATION_CODE_OVERRIDES = Object.freeze({
+  'gb-eng':'England','gb-sct':'Scotland','gb-wls':'Wales','gb-nir':'Northern Ireland','xk':'Kosovo',
+  'cz':'Czech Republic','ci':'Ivory Coast','tr':'Turkey','us':'USA','cv':'Cape Verde','tl':'East Timor',
+  'ps':'Palestine','hk':'Hong Kong','mo':'Macau','cd':'Democratic Republic of the Congo','cg':'Republic of the Congo',
+  'kr':'South Korea','kp':'North Korea'
+});
+
+const EN_REGION_NAMES = (() => {
+  try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch (_) { return null; }
+})();
+
 function flagHtml(nation, large = false) {
   if (!nation) return '<span class="flag-empty">—</span>';
   let src = flagAssetUrl(nation.flagAsset);
@@ -1102,6 +1374,14 @@ async function loadFlags() {
       : Object.entries(json || {}).map(([label, file]) => ({ label, key: label, file: normalizeFlagFile(file) })))
       .filter(x => x.file)
       .map(x => ({ ...x, lookup: flagLookupKey(x.label || x.key) }));
+    state.flagLookupMap = new Map();
+    for (const flag of state.flags) {
+      for (const key of [flag.lookup, flagLookupKey(flag.key), gameNationKey(flag.label), gameNationKey(flag.key)]) {
+        if (key && !state.flagLookupMap.has(key)) state.flagLookupMap.set(key, flag);
+      }
+    }
+    state.nationDisplayCache = new Map();
+    state.nationUiCache = null;
   } catch (error) {
     console.warn('KFM flag manifest could not be loaded:', error);
   }
@@ -1146,22 +1426,44 @@ function nationDisplayName(value) {
   const nation = value && typeof value === 'object' ? value : null;
   const raw = String(nation?.name || nation?.displayName || value || '').trim();
   if (!raw) return '';
-  const special = {
-    'gb-eng': 'England', 'gb-sct': 'Scotland', 'gb-wls': 'Wales', 'gb-nir': 'Northern Ireland',
-    'xk': 'Kosovo'
-  };
+
+  const cacheKey = [raw, nation?.displayName || '', nation?.flagKey || '', nation?.flagWebAsset || ''].join('\u0001');
+  const cached = state.nationDisplayCache.get(cacheKey);
+  if (cached) return cached;
+
+  const directCandidates = [raw, nation?.displayName, nation?.flagKey];
+  for (const candidate of directCandidates) {
+    const exact = GAME_NATION_TRANSLATION_LOOKUP.get(gameNationKey(candidate));
+    if (exact) { state.nationDisplayCache.set(cacheKey, exact); return exact; }
+  }
+
   const rawLookup = flagLookupKey(raw);
   const explicitKey = flagLookupKey(nation?.flagKey || '');
-  const hit = state.flags.find(f => f.lookup === rawLookup || (explicitKey && (f.lookup === explicitKey || flagLookupKey(f.key) === explicitKey)));
+  const hit = state.flagLookupMap.get(rawLookup) || state.flagLookupMap.get(gameNationKey(raw)) ||
+    (explicitKey ? (state.flagLookupMap.get(explicitKey) || state.flagLookupMap.get(gameNationKey(nation?.flagKey))) : null);
   const code = String(hit?.file || nation?.flagWebAsset || '').replace(/^.*\//, '').replace(/\.[^.]+$/, '').toLowerCase();
-  if (special[code]) return special[code];
-  if (/^[a-z]{2}$/.test(code)) {
-    try {
-      const names = new Intl.DisplayNames(['en'], { type: 'region' });
-      const translated = names.of(code.toUpperCase());
-      if (translated && translated.toUpperCase() !== code.toUpperCase()) return translated;
-    } catch (_) {}
+
+  if (GAME_NATION_CODE_OVERRIDES[code]) {
+    const label = GAME_NATION_CODE_OVERRIDES[code];
+    state.nationDisplayCache.set(cacheKey, label);
+    return label;
   }
+
+  if (hit?.label || hit?.key) {
+    const exact = GAME_NATION_TRANSLATION_LOOKUP.get(gameNationKey(hit.label || hit.key));
+    if (exact) { state.nationDisplayCache.set(cacheKey, exact); return exact; }
+  }
+
+  if (/^[a-z]{2}$/.test(code) && EN_REGION_NAMES) {
+    const translated = EN_REGION_NAMES.of(code.toUpperCase());
+    if (translated && translated.toUpperCase() !== code.toUpperCase()) {
+      const exact = GAME_NATION_TRANSLATION_LOOKUP.get(gameNationKey(translated)) || translated;
+      state.nationDisplayCache.set(cacheKey, exact);
+      return exact;
+    }
+  }
+
+  state.nationDisplayCache.set(cacheKey, raw);
   return raw;
 }
 
@@ -1170,12 +1472,33 @@ function nationByInternalName(value) {
   return dbIndexes().nationByName.get(String(value)) || null;
 }
 
+function nationUiRows() {
+  if (state.nationUiCache) return state.nationUiCache;
+  state.nationUiCache = [...(state.db?.data?.nations || [])]
+    .map(n => ({ nation: n, label: nationDisplayName(n) }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'en', { sensitivity: 'base' }));
+  return state.nationUiCache;
+}
 
 function nationOptions(current = '') {
-  const rows = [...(state.db?.data?.nations || [])].sort((a, b) => nationDisplayName(a).localeCompare(nationDisplayName(b), 'en', { sensitivity: 'base' }));
-  const known = rows.some(n => String(n.name) === String(current));
-  const extra = current && !known ? `<option value="${esc(current)}" selected>${esc(current)}</option>` : '';
-  return extra + rows.map(n => `<option value="${esc(n.name)}" ${String(n.name) === String(current) ? 'selected' : ''}>${esc(nationDisplayName(n))}</option>`).join('');
+  const rows = nationUiRows();
+  const known = rows.some(row => String(row.nation.name) === String(current));
+  const extra = current && !known ? `<option value="${esc(current)}" selected>${esc(GAME_NATION_TRANSLATION_LOOKUP.get(gameNationKey(current)) || current)}</option>` : '';
+  return extra + rows.map(({ nation, label }) => `<option value="${esc(nation.name)}" ${String(nation.name) === String(current) ? 'selected' : ''}>${esc(label)}</option>`).join('');
+}
+
+function lazyNationOption(current = '') {
+  const nation = nationByInternalName(current);
+  const label = nationDisplayName(nation || current) || current || '—';
+  return `<option value="${esc(current)}" selected>${esc(label)}</option>`;
+}
+
+function hydrateNationSelect(select) {
+  if (!select || select.dataset.nationHydrated === '1') return;
+  const current = select.value;
+  select.innerHTML = nationOptions(current);
+  select.value = current;
+  select.dataset.nationHydrated = '1';
 }
 
 // Player JSON can come from a different database revision or from a hand-made
@@ -1502,6 +1825,8 @@ function newPlayer(clubId = '') {
   return { id, playerId: id, firstName: '', lastName: '', name: '', nation: state.db.data.nations[0]?.name || '', position: 'CM', extraPositions: [], secondaryPositions: [], overall: 60, talent: 3, age: 18, height_cm: 180, weight_kg: 75, foot: 'rechts', clubId: clubId || '', clubName: club?.name || '', faceMode: 'placeholder', usePlaceholderFace: true, attributes: {}, traits: [], databaseId: state.db.manifest.databaseId };
 }
 
+const PLAYER_PAGE_SIZE = 60;
+
 const playerColumns = [
   ['position', 'POS', 'position', 'grid-position'],
   ['firstName', 'First Name', 'text', 'grid-name'],
@@ -1522,7 +1847,7 @@ function playerCell(p, key, type, cls) {
   if (key === 'extraPositions' && Array.isArray(v)) v = v.join(', ');
   if (type === 'nation') {
     const nation = nationByInternalName(v);
-    return `<div class="grid-nation-cell"><span class="grid-nation-flag">${flagHtml(nation)}</span><select class="cell-select ${cls}" data-pid="${esc(p.id)}" data-pkey="${key}" title="${esc(nationDisplayName(nation || v))}">${nationOptions(v)}</select></div>`;
+    return `<div class="grid-nation-cell"><span class="grid-nation-flag">${flagHtml(nation)}</span><select class="cell-select ${cls}" data-pid="${esc(p.id)}" data-pkey="${key}" data-nation-lazy="1" title="${esc(nationDisplayName(nation || v))}">${lazyNationOption(v)}</select></div>`;
   }
   if (type === 'position') {
     const normalized = normalizePositionCode(v || 'CM');
@@ -1557,11 +1882,11 @@ function renderPlayerGrid(list, options) {
   const q = state.search.toLowerCase();
   const filtered = club ? list.filter(p => !q || [p.firstName, p.lastName, p.name, p.nation, nationDisplayName(nationByInternalName(p.nation) || p.nation), p.position].join(' ').toLowerCase().includes(q)) : list;
   const sorted = sortPlayerRows(filtered);
-  const { rows, pages, start } = paginate(sorted);
+  const { rows, pages, start, pageSize } = paginate(sorted, PLAYER_PAGE_SIZE);
   const selectedAll = Boolean(sorted.length) && sorted.every(p => state.selected.has(String(p.id)));
   const selectedSome = sorted.some(p => state.selected.has(String(p.id)));
   const cols = `<colgroup><col class="col-check">${playerColumns.map(([key]) => `<col class="col-${esc(key)}">`).join('')}<col class="col-playerImage"><col class="col-details"></colgroup>`;
-  els.content.innerHTML = searchToolbar(club ? `Search ${club.name} squad…` : 'Search players…', '<span class="grid-note">Paste tab-separated Excel rows directly · click a column title to sort.</span>') + `<div class="table-wrap player-grid"><table>${cols}<thead><tr><th class="sticky-check"><input type="checkbox" id="selectAllPlayers" ${selectedAll ? 'checked' : ''} aria-label="Select all filtered players"></th>${playerColumns.map(([key, label]) => `<th class="player-col-${esc(key)}">${playerSortHeader(key, label)}</th>`).join('')}<th class="player-image-head player-col-faceMode">${playerSortHeader('faceMode', 'Image')}</th><th class="details-head"><span class="sr-only">Details</span></th></tr></thead><tbody id="playerBody">${rows.map(p => { const selected = state.selected.has(String(p.id)); return `<tr class="${selected ? 'selected' : ''}" data-player-row="${esc(p.id)}"><td class="sticky-check"><input type="checkbox" data-select-player="${esc(p.id)}" ${selected ? 'checked' : ''}></td>${playerColumns.map(([k, , t, c]) => `<td class="player-col-${esc(k)}">${playerCell(p, k, t, c)}</td>`).join('')}<td class="player-image-cell player-col-faceMode">${playerFaceCell(p)}</td><td class="details-cell"><button class="details-button" data-player-details="${esc(p.id)}" type="button" title="Open player details" aria-label="Open player details"><span aria-hidden="true">✎</span></button></td></tr>`; }).join('')}</tbody></table></div>${pager(sorted.length, pages, start)}`;
+  els.content.innerHTML = searchToolbar(club ? `Search ${club.name} squad…` : 'Search players…', '<span class="grid-note">Paste tab-separated Excel rows directly · click a column title to sort.</span>') + `<div class="table-wrap player-grid"><table>${cols}<thead><tr><th class="sticky-check"><input type="checkbox" id="selectAllPlayers" ${selectedAll ? 'checked' : ''} aria-label="Select all filtered players"></th>${playerColumns.map(([key, label]) => `<th class="player-col-${esc(key)}">${playerSortHeader(key, label)}</th>`).join('')}<th class="player-image-head player-col-faceMode">${playerSortHeader('faceMode', 'Image')}</th><th class="details-head"><span class="sr-only">Details</span></th></tr></thead><tbody id="playerBody">${rows.map(p => { const selected = state.selected.has(String(p.id)); return `<tr class="${selected ? 'selected' : ''}" data-player-row="${esc(p.id)}"><td class="sticky-check"><input type="checkbox" data-select-player="${esc(p.id)}" ${selected ? 'checked' : ''}></td>${playerColumns.map(([k, , t, c]) => `<td class="player-col-${esc(k)}">${playerCell(p, k, t, c)}</td>`).join('')}<td class="player-image-cell player-col-faceMode">${playerFaceCell(p)}</td><td class="details-cell"><button class="details-button" data-player-details="${esc(p.id)}" type="button" title="Open player details" aria-label="Open player details"><span aria-hidden="true">✎</span></button></td></tr>`; }).join('')}</tbody></table></div>${pager(sorted.length, pages, start, pageSize)}`;
   bindSearch();
   const selectAll = $('#selectAllPlayers');
   if (selectAll) selectAll.indeterminate = selectedSome && !selectedAll;
@@ -1576,7 +1901,30 @@ function renderPlayerGrid(list, options) {
     render();
   }));
   const playerBody = $('#playerBody');
+  playerBody?.addEventListener('focusin', event => {
+    const select = event.target.closest('select[data-nation-lazy]');
+    if (select) hydrateNationSelect(select);
+    const clubInput = event.target.closest('[data-club-query]');
+    if (clubInput?.value) showClubSuggestions(clubInput);
+  });
+  playerBody?.addEventListener('input', event => {
+    const clubInput = event.target.closest('[data-club-query]');
+    if (clubInput) showClubSuggestions(clubInput);
+  });
+  playerBody?.addEventListener('focusout', event => {
+    if (event.target.closest('[data-club-query]')) setTimeout(() => $('.autocomplete')?.remove(), 150);
+  });
+  playerBody?.addEventListener('pointerdown', event => {
+    const select = event.target.closest('select[data-nation-lazy]');
+    if (select) hydrateNationSelect(select);
+  });
   playerBody?.addEventListener('click', event => {
+    const positionButton = event.target.closest('[data-open-positions]');
+    if (positionButton) {
+      event.preventDefault(); event.stopPropagation(); showPositionPicker(positionButton); return;
+    }
+    const detailsButton = event.target.closest('[data-player-details]');
+    if (detailsButton) { openPlayerDrawer(detailsButton.dataset.playerDetails); return; }
     const button = event.target.closest('[data-player-face-upload],[data-player-face-generated],[data-player-face-placeholder]');
     if (!button) return;
     event.preventDefault();
@@ -1593,7 +1941,9 @@ function renderPlayerGrid(list, options) {
     setPlayerFaceMode(p, button.dataset.playerFaceGenerated ? 'generated' : 'placeholder');
     render();
   });
-  $$('[data-pid]').forEach(input => input.addEventListener('change', () => {
+  playerBody?.addEventListener('change', event => {
+    const input = event.target.closest('[data-pid][data-pkey]');
+    if (!input) return;
     const p = dbIndexes().playerById.get(String(input.dataset.pid));
     if (!p) return;
     let v = input.value;
@@ -1628,7 +1978,7 @@ function renderPlayerGrid(list, options) {
       input.title = found?.name || '';
     }
     p[key] = v; p.name = [p.firstName, p.lastName].filter(Boolean).join(' '); markPlayerTouched(p); dirty();
-  }));
+  });
   $$('[data-select-player]').forEach(check => {
     check.addEventListener('click', event => event.stopPropagation());
     check.addEventListener('change', () => {
@@ -1645,11 +1995,15 @@ function renderPlayerGrid(list, options) {
     for (const p of sorted) event.target.checked ? state.selected.add(String(p.id)) : state.selected.delete(String(p.id));
     render();
   });
-  $$('[data-player-details]').forEach(button => button.addEventListener('click', () => openPlayerDrawer(button.dataset.playerDetails)));
   playerBody?.addEventListener('paste', handlePlayerPaste);
-  bindPlayerKeyboard();
-  bindClubAutocomplete();
-  bindPositionPickers();
+  playerBody?.addEventListener('keydown', event => {
+    const el = event.target.closest('[data-pid]');
+    if (!el || event.key !== 'Enter') return;
+    event.preventDefault();
+    const cells = $$('[data-pid]', playerBody);
+    const i = cells.indexOf(el);
+    cells[Math.min(cells.length - 1, i + 1)]?.focus();
+  });
   updateSelectionBar('player');
 }
 
