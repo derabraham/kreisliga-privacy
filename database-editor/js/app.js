@@ -1,8 +1,8 @@
 import {
   emptyData, ensureIds, makeId, indexes, validate, ratingClass, esc,
   POSITIONS, FEET, download, leagueNation, additionalPlayerGenerationMode, shouldGenerateAdditionalPlayers, ADDITIONAL_PLAYER_AUTO_THRESHOLD
-} from './core.js?v=20260822-22';
-import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-22';
+} from './core.js?v=20260822-23';
+import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-23';
 import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-22';
 import { compatiblePlayerPacks } from './player-packs.js?v=20260822-22';
 import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-22';
@@ -193,7 +193,7 @@ function setDb(db) {
     player.position = normalizePositionCode(player.position || 'CM');
     const extras = player.extraPositions ?? player.secondaryPositions ?? [];
     const normalizedExtras = [...new Set((Array.isArray(extras) ? extras : String(extras || '').split(','))
-      .map(normalizePositionCode)
+      .map(normalizeOptionalPositionCode)
       .filter(pos => POSITIONS.includes(pos) && pos !== player.position))];
     player.extraPositions = normalizedExtras;
     player.secondaryPositions = [...normalizedExtras];
@@ -1600,7 +1600,7 @@ function normalizeImportedPlayer(rawPlayer, lookup, usedPlayerIds) {
   player.position = normalizePositionCode(player.position || 'CM');
   const extras = player.extraPositions ?? player.secondaryPositions ?? [];
   const normalizedExtras = [...new Set((Array.isArray(extras) ? extras : String(extras || '').split(','))
-    .map(normalizePositionCode)
+    .map(normalizeOptionalPositionCode)
     .filter(pos => POSITIONS.includes(pos) && pos !== player.position))];
   player.extraPositions = normalizedExtras;
   player.secondaryPositions = [...normalizedExtras];
@@ -1694,11 +1694,31 @@ function databaseConfederationPoints(row) {
   return Math.max(0.05, Math.round((score + Number.EPSILON) * 1000) / 1000);
 }
 
+const STUDIO_POSITION_ALIASES = Object.freeze({
+  GK:'GK', G:'GK', TW:'GK', GOALKEEPER:'GK', KEEPER:'GK', TORWART:'GK',
+  RB:'RB', RWB:'RB', RV:'RB', RIGHTBACK:'RB', RIGHTWINGBACK:'RB',
+  CB:'CB', LCB:'CB', RCB:'CB', IV:'CB', ZIV:'CB', LIV:'CB', RIV:'CB', CENTERBACK:'CB', CENTREBACK:'CB',
+  LB:'LB', LWB:'LB', LV:'LB', LEFTBACK:'LB', LEFTWINGBACK:'LB',
+  CDM:'CDM', DM:'CDM', ZDM:'CDM', LZDM:'CDM', RZDM:'CDM', DEFENSIVEMIDFIELDER:'CDM', DEFENSIVEMIDFIELD:'CDM',
+  CM:'CM', ZM:'CM', LZM:'CM', RZM:'CM', CENTRALMIDFIELDER:'CM', CENTREMIDFIELDER:'CM', CENTRALMIDFIELD:'CM',
+  CAM:'CAM', AM:'CAM', ZOM:'CAM', LZOM:'CAM', RZOM:'CAM', ATTACKINGMIDFIELDER:'CAM', OFFENSIVEMIDFIELDER:'CAM',
+  RM:'RM', RIGHTMIDFIELDER:'RM', RIGHTMIDFIELD:'RM',
+  RW:'RW', RF:'RW', RIGHTWINGER:'RW', RIGHTFORWARD:'RW',
+  LM:'LM', LEFTMIDFIELDER:'LM', LEFTMIDFIELD:'LM',
+  LW:'LW', LF:'LW', LEFTWINGER:'LW', LEFTFORWARD:'LW',
+  ST:'ST', LST:'ST', ZST:'ST', RST:'ST', STRIKER:'ST', FORWARD:'ST',
+  CF:'CF', SS:'CF', HS:'CF', LHS:'CF', ZHS:'CF', RHS:'CF', CENTERFORWARD:'CF', CENTREFORWARD:'CF', SECONDSTRIKER:'CF'
+});
+function studioPositionKey(value) {
+  return String(value || '').trim().toUpperCase().replace(/[\s._\-/]+/g, '');
+}
 function normalizePositionCode(value) {
-  const pos = String(value || '').trim().toUpperCase();
-  if (pos === 'RWB') return 'RB';
-  if (pos === 'LWB') return 'LB';
-  return POSITIONS.includes(pos) ? pos : (pos || 'CM');
+  const raw = String(value || '').trim().toUpperCase();
+  return STUDIO_POSITION_ALIASES[studioPositionKey(value)] || (POSITIONS.includes(raw) ? raw : 'CM');
+}
+function normalizeOptionalPositionCode(value) {
+  const raw = String(value || '').trim().toUpperCase();
+  return STUDIO_POSITION_ALIASES[studioPositionKey(value)] || (POSITIONS.includes(raw) ? raw : '');
 }
 
 function positionClass(value) {
@@ -1950,12 +1970,12 @@ function renderPlayerGrid(list, options) {
     const key = input.dataset.pkey;
     if (['overall', 'talent', 'age', 'height_cm', 'weight_kg'].includes(key)) v = Number(v) || 0;
     if (key === 'extraPositions') {
-      v = [...new Set(v.split(',').map(x => x.trim().toUpperCase()).map(normalizePositionCode).filter(x => POSITIONS.includes(x) && x !== String(p.position || '').toUpperCase()))];
+      v = [...new Set(v.split(',').map(x => x.trim().toUpperCase()).map(normalizeOptionalPositionCode).filter(x => POSITIONS.includes(x) && x !== String(p.position || '').toUpperCase()))];
       p.secondaryPositions = [...v];
       input.value = v.join(', ');
     }
     if (key === 'position') {
-      const filteredPositions = (p.extraPositions || p.secondaryPositions || []).map(x => String(x).toUpperCase()).map(normalizePositionCode).filter(x => x !== String(v).toUpperCase());
+      const filteredPositions = (p.extraPositions || p.secondaryPositions || []).map(x => String(x).toUpperCase()).map(normalizeOptionalPositionCode).filter(x => x !== String(v).toUpperCase());
       p.extraPositions = [...new Set(filteredPositions)];
       p.secondaryPositions = [...p.extraPositions];
       const extraInput = input.closest('tr')?.querySelector('[data-pkey="extraPositions"]');
@@ -2125,7 +2145,7 @@ function handlePlayerPaste(event) {
       if (['overall', 'talent', 'age', 'height_cm', 'weight_kg'].includes(key)) v = Number(v) || 0;
       if (key === 'position') v = normalizePositionCode(v || 'CM');
       if (key === 'extraPositions') {
-        v = [...new Set(v.split(',').map(x => x.trim().toUpperCase()).map(normalizePositionCode).filter(x => POSITIONS.includes(x) && x !== normalizePositionCode(p.position || 'CM')))];
+        v = [...new Set(v.split(',').map(x => x.trim().toUpperCase()).map(normalizeOptionalPositionCode).filter(x => POSITIONS.includes(x) && x !== normalizePositionCode(p.position || 'CM')))];
         p.secondaryPositions = [...v];
       }
       if (key === 'nation') {
@@ -2456,7 +2476,7 @@ function openPlayerDrawer(id) {
       if (input.name === 'overall') { value = Math.max(1, Math.min(99, Math.round(value || 1))); input.value = value; }
       if (input.name === 'position') {
         value = normalizePositionCode(value);
-        const extras = (p.extraPositions || p.secondaryPositions || []).map(normalizePositionCode).filter(pos => pos !== value && POSITIONS.includes(pos));
+        const extras = (p.extraPositions || p.secondaryPositions || []).map(normalizeOptionalPositionCode).filter(pos => pos !== value && POSITIONS.includes(pos));
         p.extraPositions = [...new Set(extras)]; p.secondaryPositions = [...p.extraPositions];
         const wrap = input.closest('.drawer-position-wrap');
         if (wrap) wrap.className = `drawer-position-wrap ${positionClass(value)}`;
