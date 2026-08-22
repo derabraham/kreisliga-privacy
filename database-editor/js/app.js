@@ -1,8 +1,9 @@
 import {
   emptyData, ensureIds, makeId, indexes, validate, ratingClass, esc,
-  POSITIONS, FEET, download, leagueNation, additionalPlayerGenerationMode, shouldGenerateAdditionalPlayers, ADDITIONAL_PLAYER_AUTO_THRESHOLD
-} from './core.js?v=20260822-23';
-import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-23';
+  POSITIONS, FEET, download, leagueNation, additionalPlayerGenerationMode, shouldGenerateAdditionalPlayers, ADDITIONAL_PLAYER_AUTO_THRESHOLD,
+  calculateAutomaticClubRating, syncAutomaticClubRatings
+} from './core.js?v=20260823-01';
+import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260823-01';
 import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-22';
 import { compatiblePlayerPacks } from './player-packs.js?v=20260822-22';
 import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-22';
@@ -198,10 +199,12 @@ function setDb(db) {
     player.extraPositions = normalizedExtras;
     player.secondaryPositions = [...normalizedExtras];
   }
+  const autoRatingSync = syncAutomaticClubRatings(db.data);
+  if (autoRatingSync.changed) db.dirty = true;
   resetTransient();
   resetStructure();
   els.dbName.textContent = db.manifest.displayName;
-  els.dbMeta.textContent = `${db.manifest.version || '1.0.0'} · ${db.data.clubs.length.toLocaleString()} clubs · ${db.data.players.length.toLocaleString()} players`;
+  els.dbMeta.textContent = db.dirty ? `Unsaved changes · ${db.data.clubs.length.toLocaleString()} clubs · ${db.data.players.length.toLocaleString()} players` : `${db.manifest.version || '1.0.0'} · ${db.data.clubs.length.toLocaleString()} clubs · ${db.data.players.length.toLocaleString()} players`;
   els.chip.classList.add('loaded');
   els.exportBtn.disabled = false;
   els.metadataBtn.disabled = false;
@@ -243,6 +246,26 @@ function dbIndexes(){
   const value=indexes(state.db.data);
   state.indexCache={revision:state.dataRevision,value};
   return value;
+}
+
+function refreshAutomaticClubRatings(clubIds=null,{markDirty=false}={}){
+  if(!state.db) return { changed:0, eligible:0, changes:[] };
+  const result=syncAutomaticClubRatings(state.db.data,clubIds);
+  if(result.changed){
+    state.dataRevision += 1;
+    state.indexCache = null;
+    if(markDirty){
+      state.db.dirty = true;
+      if(state.contribution) state.contribution._cachedRevision = null;
+      els.dbMeta.textContent = `Unsaved changes · ${state.db.data.clubs.length.toLocaleString()} clubs · ${state.db.data.players.length.toLocaleString()} players`;
+    }
+  }
+  return result;
+}
+
+function refreshAutomaticClubRatingsForPlayers(players,{markDirty=false}={}){
+  const ids=new Set((Array.isArray(players)?players:[players]).map(player=>String(player?.clubId||'')).filter(Boolean));
+  return ids.size?refreshAutomaticClubRatings(ids,{markDirty}):{changed:0,eligible:0,changes:[]};
 }
 
 function contributionChangesCached(){
@@ -746,7 +769,10 @@ function clubRowLogoHtml(editor) {
 function clubEditRowHtml(editor, league) {
   if (!editor) return '';
   const d = editor.draft;
-  const players = editor.isNew ? 0 : playersForClub(d).length;
+  const clubPlayers = editor.isNew ? [] : playersForClub(d);
+  const players = clubPlayers.length;
+  const automaticRating = calculateAutomaticClubRating(clubPlayers);
+  if (automaticRating != null) d.rating = automaticRating;
   const primary = String(d.primarycolor || d.primaryColor || '#1e9ed2');
   const secondary = String(d.secondarycolor || d.secondaryColor || '#0b2235');
   const generationMode = additionalPlayerGenerationMode(d);
@@ -756,7 +782,7 @@ function clubEditRowHtml(editor, league) {
     <td class="club-logo-col"><div class="club-grid-logo-editor">${clubRowLogoHtml(editor)}<button class="grid-logo-upload" data-club-logo-upload type="button" title="Upload team logo">＋</button></div></td>
     <td><input class="club-grid-input" data-club-field="name" value="${esc(d.name || '')}" placeholder="Club name"></td>
     <td><input class="club-grid-input" data-club-field="shortName" value="${esc(d.shortName || '')}" placeholder="Short"></td>
-    <td><input class="club-grid-input numeric" data-club-field="rating" type="number" min="0" max="100" step="0.01" value="${esc(d.rating ?? 50)}"></td>
+    <td><input class="club-grid-input numeric" data-club-field="rating" type="number" min="0" max="100" step="0.01" value="${esc(d.rating ?? 50)}" ${automaticRating != null ? 'disabled' : ''} title="${automaticRating != null ? `Automatic: average of the strongest ${ADDITIONAL_PLAYER_AUTO_THRESHOLD} player OVRs` : `Manual until ${ADDITIONAL_PLAYER_AUTO_THRESHOLD} rated players exist`}"></td>
     <td class="club-readonly-number">${players}</td>
     <td><select class="club-grid-select" data-club-field="additionalPlayerGeneration" title="${esc(generationLabel)}"><option value="auto" ${generationMode==='auto'?'selected':''}>${esc(generationLabel)}</option><option value="always" ${generationMode==='always'?'selected':''}>Always fill squad</option><option value="off" ${generationMode==='off'?'selected':''}>Database players only</option></select></td>
     <td><input class="club-grid-input" data-club-field="stadium" value="${esc(d.stadium || '')}" placeholder="Stadium"></td>
@@ -831,6 +857,8 @@ function renderLeagueClubs() {
   els.title.textContent = league.name;
   els.subtitle.textContent = 'Select clubs for bulk actions, edit clubs directly in the table, or open one to manage its squad.';
   els.actions.innerHTML = `<button class="btn" id="editLeagueTop" type="button">Edit league</button><button class="btn" id="add10Clubs" type="button">＋ 10 clubs</button><button class="btn primary" id="addClub" type="button">＋ Add club</button>`;
+  const leagueClubIds = new Set(clubsForLeague(league).map(c => String(c.id)));
+  refreshAutomaticClubRatings(leagueClubIds,{markDirty:true});
   const ix = dbIndexes();
   const q = state.search.toLowerCase();
   const editingSourceIds = new Set(editors.map(editor => String(editor.sourceId || '')).filter(Boolean));
@@ -1921,8 +1949,8 @@ function renderPlayerGrid(list, options) {
   bindSearch();
   const selectAll = $('#selectAllPlayers');
   if (selectAll) selectAll.indeterminate = selectedSome && !selectedAll;
-  $('#addPlayer')?.addEventListener('click', () => { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); markPlayerAdded(p); dirty(); render(); });
-  $('#add20')?.addEventListener('click', () => { for (let i = 0; i < 20; i++) { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); markPlayerAdded(p); } dirty(); render(); });
+  $('#addPlayer')?.addEventListener('click', () => { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); markPlayerAdded(p); dirty(); refreshAutomaticClubRatingsForPlayers(p,{markDirty:true}); render(); });
+  $('#add20')?.addEventListener('click', () => { const added=[]; for (let i = 0; i < 20; i++) { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); added.push(p); markPlayerAdded(p); } dirty(); refreshAutomaticClubRatingsForPlayers(added,{markDirty:true}); render(); });
   $('#importPlayers')?.addEventListener('click', () => { $('#jsonInput').dataset.mode = 'players'; $('#jsonInput').click(); });
   $$('[data-player-sort]').forEach(button => button.addEventListener('click', () => {
     const key = button.dataset.playerSort;
@@ -1979,6 +2007,7 @@ function renderPlayerGrid(list, options) {
     if (!p) return;
     let v = input.value;
     const key = input.dataset.pkey;
+    const oldClubId = String(p.clubId || '');
     if (['overall', 'talent', 'age', 'height_cm', 'weight_kg'].includes(key)) v = Number(v) || 0;
     if (key === 'extraPositions') {
       v = [...new Set(v.split(',').map(x => x.trim().toUpperCase()).map(normalizeOptionalPositionCode).filter(x => POSITIONS.includes(x) && x !== String(p.position || '').toUpperCase()))];
@@ -2009,6 +2038,7 @@ function renderPlayerGrid(list, options) {
       input.title = found?.name || '';
     }
     p[key] = v; p.name = [p.firstName, p.lastName].filter(Boolean).join(' '); markPlayerTouched(p); dirty();
+    if (key === 'overall' || key === 'clubId') refreshAutomaticClubRatings(new Set([oldClubId,String(p.clubId||'')].filter(Boolean)),{markDirty:true});
   });
   $$('[data-select-player]').forEach(check => {
     check.addEventListener('click', event => event.stopPropagation());
@@ -2067,7 +2097,7 @@ function showClubSuggestions(input) {
     if (!c) return;
     input.value = c.name;
     const p = dbIndexes().playerById.get(String(input.dataset.pid));
-    if (p) { p.clubId = c.id; p.clubName = c.name; markPlayerTouched(p); dirty(); }
+    if (p) { const oldClubId=String(p.clubId||''); p.clubId = c.id; p.clubName = c.name; markPlayerTouched(p); dirty(); refreshAutomaticClubRatings(new Set([oldClubId,String(c.id)].filter(Boolean)),{markDirty:true}); }
     const holder = input.closest('.grid-club-cell')?.querySelector('.club-logo-box');
     if (holder) holder.outerHTML = clubLogoHtml(c, true);
     box.remove();
@@ -2176,7 +2206,7 @@ function handlePlayerPaste(event) {
     p.name = [p.firstName, p.lastName].filter(Boolean).join(' ');
     markPlayerTouched(p);
   }
-  dirty(); toast(`${matrix.length} pasted row${matrix.length === 1 ? '' : 's'}.`); render();
+  dirty(); refreshAutomaticClubRatings(null,{markDirty:true}); toast(`${matrix.length} pasted row${matrix.length === 1 ? '' : 's'}.`); render();
 }
 
 function entityAssetPaths(entity) {
@@ -2446,7 +2476,7 @@ function performBulkOperation(mode, type, targetId, level = 1) {
       else state.db.data.players.push(...source.map(p => clonePlayerTo(p, club.id)));
     }
     ensureIds(state.db.data, state.db.manifest.databaseId);
-    state.selected.clear(); dirty(); closeModal(); render();
+    state.selected.clear(); dirty(); refreshAutomaticClubRatings(null,{markDirty:true}); closeModal(); render();
     toast(`${mode === 'move' ? 'Moved' : 'Copied'} successfully.`);
   } catch (error) { toast(error.message || String(error), 'error'); }
 }
@@ -2469,7 +2499,7 @@ function duplicateSelected(type) {
   } else if (type === 'league') {
     for (const l of state.db.data.leagues.filter(l => ids.has(String(l.id)))) { const x = structuredClone(l); x.id = x.leagueId = makeId('LEAGUE'); x.name = `${l.name} Copy`; x.teams = 0; state.db.data.leagues.push(x); }
   }
-  state.selected.clear(); dirty(); render(); toast('Selection duplicated.');
+  state.selected.clear(); dirty(); refreshAutomaticClubRatings(null,{markDirty:true}); render(); toast('Selection duplicated.');
 }
 
 function deleteSelected(type) {
@@ -2504,7 +2534,7 @@ function deleteSelected(type) {
     state.db.data.clubs = state.db.data.clubs.filter(c => !ids.has(String(c.id)));
     for (const p of state.db.data.players) if (ids.has(String(p.clubId))) { p.clubId = ''; p.clubName = ''; }
   } else if (type === 'nation') state.db.data.nations = state.db.data.nations.filter(n => !ids.has(String(n.id)));
-  state.selected.clear(); dirty(); render(); toast(`${count} deleted.`);
+  state.selected.clear(); dirty(); refreshAutomaticClubRatings(null,{markDirty:true}); render(); toast(`${count} deleted.`);
 }
 
 function openPlayerDrawer(id) {
@@ -2636,6 +2666,7 @@ function openPlayerDrawer(id) {
       if (title) title.textContent = p.name || 'Unnamed player';
     }
     markPlayerTouched(p); dirty();
+    if (input.name === 'overall') refreshAutomaticClubRatingsForPlayers(p,{markDirty:true});
   }));
 
   $('#uploadFace', drawer).addEventListener('click', () => { state.imageTarget = { type: 'player', id: p.id }; $('#imageInput').click(); });
@@ -3054,6 +3085,7 @@ $('#jsonInput').addEventListener('change', async event => {
       state.db.data.players.push(...items);
       for (const p of items) markPlayerAdded(p);
       dirty();
+      refreshAutomaticClubRatingsForPlayers(items,{markDirty:true});
       const unresolvedNation = Math.max(0, nationCandidates - nationsResolved);
       const unresolvedClub = Math.max(0, clubCandidates - clubsResolved);
       const details = unresolvedNation || unresolvedClub

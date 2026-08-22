@@ -2,6 +2,43 @@ export const DB_SCHEMA_VERSION=1;
 export const POSITIONS=['GK','RB','CB','LB','CDM','CM','CAM','RM','RW','LM','LW','ST','CF'];
 export const FEET=['Right','Left','Both'];
 export const ADDITIONAL_PLAYER_AUTO_THRESHOLD=18;
+export const AUTO_TEAM_RATING_THRESHOLD=ADDITIONAL_PLAYER_AUTO_THRESHOLD;
+export function calculateAutomaticClubRating(players=[],threshold=AUTO_TEAM_RATING_THRESHOLD){
+ const required=Math.max(1,Math.trunc(Number(threshold)||AUTO_TEAM_RATING_THRESHOLD));
+ const ratings=(Array.isArray(players)?players:[])
+  .map(player=>Number(player?.overall))
+  .filter(value=>Number.isFinite(value)&&value>=1&&value<=99)
+  .sort((a,b)=>b-a);
+ if(ratings.length<required)return null;
+ const selected=ratings.slice(0,required);
+ const average=selected.reduce((sum,value)=>sum+value,0)/selected.length;
+ return Math.round((average+Number.EPSILON)*100)/100;
+}
+export function syncAutomaticClubRatings(data,clubIds=null,threshold=AUTO_TEAM_RATING_THRESHOLD){
+ if(!data||!Array.isArray(data.clubs)||!Array.isArray(data.players))return{changed:0,eligible:0,changes:[]};
+ const filterIds=clubIds==null?null:new Set((clubIds instanceof Set?[...clubIds]:Array.isArray(clubIds)?clubIds:[clubIds]).map(String));
+ const playersByClub=new Map();
+ for(const player of data.players){
+  const clubId=String(player?.clubId||'');
+  if(!clubId||(filterIds&&!filterIds.has(clubId)))continue;
+  if(!playersByClub.has(clubId))playersByClub.set(clubId,[]);
+  playersByClub.get(clubId).push(player);
+ }
+ const changes=[];let eligible=0;
+ for(const club of data.clubs){
+  const clubId=String(club?.id||club?.clubId||'');
+  if(!clubId||(filterIds&&!filterIds.has(clubId)))continue;
+  const rating=calculateAutomaticClubRating(playersByClub.get(clubId)||[],threshold);
+  if(rating==null)continue;
+  eligible++;
+  const before=Number(club.rating);
+  if(!Number.isFinite(before)||Math.abs(before-rating)>0.0001){
+   club.rating=rating;
+   changes.push({clubId,before:Number.isFinite(before)?before:null,after:rating});
+  }
+ }
+ return{changed:changes.length,eligible,changes};
+}
 export function additionalPlayerGenerationMode(club){
  const raw=String(club?.additionalPlayerGeneration||'').trim().toLowerCase();
  if(['auto','always','off'].includes(raw))return raw;
