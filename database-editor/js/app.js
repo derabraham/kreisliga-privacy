@@ -1,12 +1,12 @@
 import {
   emptyData, ensureIds, makeId, indexes, validate, ratingClass, esc,
   POSITIONS, FEET, download, leagueNation, additionalPlayerGenerationMode, shouldGenerateAdditionalPlayers, ADDITIONAL_PLAYER_AUTO_THRESHOLD
-} from './core.js?v=20260822-20';
-import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-20';
-import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-20';
-import { compatiblePlayerPacks } from './player-packs.js?v=20260822-20';
-import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-20';
-import { createContributionWorkspace, buildContributionChanges, validateContribution, exportContribution, importContribution, reviewContribution, applyReviewedChanges, trackedContributionHash, noteContributionMutation, contributionChangeSummary } from './contributions.js?v=20260822-20';
+} from './core.js?v=20260822-21';
+import { importKfmdb, exportKfmdb } from './kfmdb.js?v=20260822-21';
+import { listOfficial, loadOfficial, loadOfficialContributionBase, loadOfficialReviewBase, loadReferenceScaffold } from './official-loader.js?v=20260822-21';
+import { compatiblePlayerPacks } from './player-packs.js?v=20260822-21';
+import { ensureDatabaseSettings, normalizeDatabaseSettings } from './database-settings.js?v=20260822-21';
+import { createContributionWorkspace, buildContributionChanges, validateContribution, exportContribution, importContribution, reviewContribution, applyReviewedChanges, trackedContributionHash, noteContributionMutation, contributionChangeSummary } from './contributions.js?v=20260822-21';
 
 
 const $ = (s, root = document) => root.querySelector(s);
@@ -1176,6 +1176,129 @@ function nationOptions(current = '') {
   const known = rows.some(n => String(n.name) === String(current));
   const extra = current && !known ? `<option value="${esc(current)}" selected>${esc(current)}</option>` : '';
   return extra + rows.map(n => `<option value="${esc(n.name)}" ${String(n.name) === String(current) ? 'selected' : ''}>${esc(nationDisplayName(n))}</option>`).join('');
+}
+
+// Player JSON can come from a different database revision or from a hand-made
+// pack. Resolve its human-readable nation/club values to the canonical records
+// of the database that is currently open. The grid itself stores the internal
+// nation name and club ID, so doing this once at import time avoids the old
+// "open the dropdown once to make the logo appear" behaviour.
+function addImportAlias(map, value, entity) {
+  const raw = value && typeof value === 'object'
+    ? String(value.name || value.displayName || value.id || value.code || '')
+    : String(value || '');
+  const key = flagLookupKey(raw);
+  if (!key) return;
+  const existing = map.get(key);
+  if (existing === undefined) map.set(key, entity);
+  else if (existing !== entity) map.set(key, null); // ambiguous alias: never guess
+}
+
+function importLookupMaps() {
+  const nationById = new Map();
+  const nationByAlias = new Map();
+  for (const nation of state.db?.data?.nations || []) {
+    for (const id of [nation.id, nation.nationId, nation.countryKey, nation.iso, nation.iso2, nation.iso3]) {
+      const raw = String(id || '').trim();
+      if (raw && !nationById.has(raw.toLowerCase())) nationById.set(raw.toLowerCase(), nation);
+    }
+    for (const alias of [nation.name, nation.displayName, nation.shortName, nation.countryKey, nation.iso, nation.iso2, nation.iso3, nation.flagKey, nationDisplayName(nation)]) {
+      addImportAlias(nationByAlias, alias, nation);
+    }
+    const flagCode = String(nation.flagWebAsset || '').replace(/^.*\//, '').replace(/\.[^.]+$/, '').trim();
+    if (flagCode) addImportAlias(nationByAlias, flagCode, nation);
+  }
+
+  const clubById = new Map();
+  const clubByAlias = new Map();
+  for (const club of state.db?.data?.clubs || []) {
+    for (const id of [club.id, club.clubId, club.sourceClubId, club.teamId, club.sourceId]) {
+      const raw = String(id || '').trim();
+      if (raw && !clubById.has(raw.toLowerCase())) clubById.set(raw.toLowerCase(), club);
+    }
+    for (const alias of [club.name, club.displayName, club.shortName, club.clubName]) addImportAlias(clubByAlias, alias, club);
+  }
+  return { nationById, nationByAlias, clubById, clubByAlias };
+}
+
+function resolveImportedNation(player, lookup) {
+  const directCandidates = [player.nationId, player.countryId, player.nationalityId];
+  for (const candidate of directCandidates) {
+    const hit = lookup.nationById.get(String(candidate || '').trim().toLowerCase());
+    if (hit) return hit;
+  }
+  const textCandidates = [player.nation, player.nationality, player.country, player.nationName, player.countryName];
+  for (const candidate of textCandidates) {
+    const raw = candidate && typeof candidate === 'object'
+      ? (candidate.name || candidate.displayName || candidate.id || candidate.code || '')
+      : candidate;
+    const rawText = String(raw || '').trim();
+    if (!rawText) continue;
+    const byId = lookup.nationById.get(rawText.toLowerCase());
+    if (byId) return byId;
+    const byAlias = lookup.nationByAlias.get(flagLookupKey(rawText));
+    if (byAlias) return byAlias;
+  }
+  return null;
+}
+
+function resolveImportedClub(player, lookup) {
+  const idCandidates = [player.clubId, player.teamId, player.sourceClubId, player.club?.id, player.team?.id];
+  for (const candidate of idCandidates) {
+    const raw = String(candidate || '').trim();
+    if (!raw) continue;
+    const hit = lookup.clubById.get(raw.toLowerCase());
+    if (hit) return hit;
+    const aliasHit = lookup.clubByAlias.get(flagLookupKey(raw));
+    if (aliasHit) return aliasHit;
+  }
+  const textCandidates = [player.clubName, player.teamName, player.club, player.team];
+  for (const candidate of textCandidates) {
+    const raw = candidate && typeof candidate === 'object'
+      ? (candidate.name || candidate.displayName || candidate.shortName || '')
+      : candidate;
+    const rawText = String(raw || '').trim();
+    if (!rawText) continue;
+    const hit = lookup.clubByAlias.get(flagLookupKey(rawText));
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function normalizeImportedPlayer(rawPlayer, lookup, usedPlayerIds) {
+  const player = { ...(rawPlayer || {}) };
+  let id = String(player.id || player.playerId || '').trim();
+  if (!id || usedPlayerIds.has(id)) id = makeId('PLAYER');
+  usedPlayerIds.add(id);
+  player.id = id;
+  player.playerId = id;
+  player.databaseId = state.db.manifest.databaseId;
+
+  player.position = normalizePositionCode(player.position || 'CM');
+  const extras = player.extraPositions ?? player.secondaryPositions ?? [];
+  const normalizedExtras = [...new Set((Array.isArray(extras) ? extras : String(extras || '').split(','))
+    .map(normalizePositionCode)
+    .filter(pos => POSITIONS.includes(pos) && pos !== player.position))];
+  player.extraPositions = normalizedExtras;
+  player.secondaryPositions = [...normalizedExtras];
+
+  const nation = resolveImportedNation(player, lookup);
+  if (nation) {
+    player.nation = nation.name;
+    player.nationId = nation.id;
+  }
+
+  const club = resolveImportedClub(player, lookup);
+  if (club) {
+    player.clubId = club.id;
+    player.clubName = club.name;
+  } else if (!String(player.clubId || '').trim()) {
+    player.clubId = '';
+    player.clubName = String(player.clubName || player.teamName || '').trim();
+  }
+
+  player.name = [player.firstName, player.lastName].filter(Boolean).join(' ') || String(player.name || '').trim();
+  return { player, nationResolved: Boolean(nation), clubResolved: Boolean(club) };
 }
 
 function confederationCompetitionFamily(compKey) {
@@ -2368,9 +2491,36 @@ $('#jsonInput').addEventListener('change', async event => {
   const file = event.target.files?.[0]; event.target.value = ''; if (!file || !requireDb()) return;
   try {
     const json = JSON.parse(await file.text()); if (!Array.isArray(json)) throw new Error('Expected a JSON array');
-    if (event.target.dataset.mode === 'players') { const items = json.map(p => ({ ...p, id: p.id || makeId('PLAYER'), playerId: p.playerId || p.id || makeId('PLAYER'), databaseId: state.db.manifest.databaseId })); state.db.data.players.push(...items); ensureIds(state.db.data, state.db.manifest.databaseId); for (const p of items) markPlayerAdded(p); dirty(); toast(`${items.length} players imported.`); render(); }
+    if (event.target.dataset.mode === 'players') {
+      const lookup = importLookupMaps();
+      const usedPlayerIds = new Set((state.db.data.players || []).map(p => String(p.id || p.playerId || '')).filter(Boolean));
+      let nationsResolved = 0, clubsResolved = 0, nationCandidates = 0, clubCandidates = 0;
+      const items = json.map(raw => {
+        const hasNation = [raw?.nation, raw?.nationality, raw?.country, raw?.nationName, raw?.countryName, raw?.nationId, raw?.countryId, raw?.nationalityId]
+          .some(v => String(v && typeof v === 'object' ? (v.name || v.id || '') : (v || '')).trim());
+        const hasClub = [raw?.clubId, raw?.teamId, raw?.sourceClubId, raw?.clubName, raw?.teamName, raw?.club, raw?.team]
+          .some(v => String(v && typeof v === 'object' ? (v.name || v.id || '') : (v || '')).trim());
+        if (hasNation) nationCandidates += 1;
+        if (hasClub) clubCandidates += 1;
+        const normalized = normalizeImportedPlayer(raw, lookup, usedPlayerIds);
+        if (normalized.nationResolved) nationsResolved += 1;
+        if (normalized.clubResolved) clubsResolved += 1;
+        return normalized.player;
+      });
+      state.db.data.players.push(...items);
+      for (const p of items) markPlayerAdded(p);
+      dirty();
+      const unresolvedNation = Math.max(0, nationCandidates - nationsResolved);
+      const unresolvedClub = Math.max(0, clubCandidates - clubsResolved);
+      const details = unresolvedNation || unresolvedClub
+        ? ` · ${unresolvedNation} nation / ${unresolvedClub} club reference(s) could not be matched automatically.`
+        : ' · Nation flags and club logos linked automatically.';
+      toast(`${items.length} players imported${details}`, unresolvedNation || unresolvedClub ? 'error' : 'ok');
+      render();
+    }
   } catch (error) { toast(`JSON import failed: ${error.message}`, 'error'); }
 });
+
 
 $('#imageInput').addEventListener('change', async event => {
   const file = event.target.files?.[0];
