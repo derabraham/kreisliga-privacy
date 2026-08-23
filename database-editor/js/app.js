@@ -17,6 +17,7 @@ const state = {
   db: null,
   view: 'overview',
   search: '',
+  playerTeamSearch: '',
   page: 1,
   pageSize: 100,
   selected: new Set(),
@@ -149,6 +150,7 @@ function optimizationToast(result) {
 function resetTransient() {
   state.page = 1;
   state.search = '';
+  state.playerTeamSearch = '';
   state.selected.clear();
   removeSelectionBar();
 }
@@ -454,12 +456,29 @@ function pager(total, pages, start, pageSize = state.pageSize) {
   return `<div class="pager"><span>${total ? `${start + 1}-${Math.min(start + pageSize, total)} / ${total}` : '0 entries'}</span><div class="pager-controls"><button class="btn small" data-page="prev" ${state.page <= 1 ? 'disabled' : ''} type="button">‹</button><span>${state.page} / ${pages}</span><button class="btn small" data-page="next" ${state.page >= pages ? 'disabled' : ''} type="button">›</button></div></div>`;
 }
 
+function rerenderKeepingInputFocus(input, inputId, selectionStart, selectionEnd) {
+  const shouldRestore = document.activeElement === input;
+  render();
+  if (!shouldRestore) return;
+  const next = document.getElementById(inputId);
+  if (!next) return;
+  next.focus({ preventScroll: true });
+  if (typeof next.setSelectionRange === 'function' && Number.isFinite(selectionStart) && Number.isFinite(selectionEnd)) {
+    try { next.setSelectionRange(selectionStart, selectionEnd); } catch (_) {}
+  }
+}
+
 function bindSearch() {
   const input = $('#searchInput');
   if (input) input.addEventListener('input', () => {
     state.search = input.value; state.page = 1;
+    const selectionStart = input.selectionStart;
+    const selectionEnd = input.selectionEnd;
     if (state.searchTimer) clearTimeout(state.searchTimer);
-    state.searchTimer = setTimeout(() => { state.searchTimer = null; render(); }, 90);
+    state.searchTimer = setTimeout(() => {
+      state.searchTimer = null;
+      rerenderKeepingInputFocus(input, 'searchInput', selectionStart, selectionEnd);
+    }, 90);
   });
   $$('[data-page]').forEach(button => button.addEventListener('click', () => { state.page += button.dataset.page === 'next' ? 1 : -1; render(); }));
 }
@@ -1866,15 +1885,22 @@ function sortPlayerRows(rows) {
 
 function playerSearchList() {
   const q = state.search.trim().toLowerCase();
+  const teamQ = state.playerTeamSearch.trim().toLowerCase();
+  const ix = dbIndexes();
   return state.db.data.players.filter(player => {
-    if (!q) return true;
     const nation = nationByInternalName(player.nation);
-    const club = dbIndexes().clubById.get(String(player.clubId));
-    return [
+    const club = ix.clubById.get(String(player.clubId));
+    const playerHaystack = [
       player.firstName, player.lastName, player.name,
       player.nation, nationDisplayName(nation || player.nation),
       player.position, club?.name, player.clubName
-    ].join(' ').toLowerCase().includes(q);
+    ].join(' ').toLowerCase();
+    if (q && !playerHaystack.includes(q)) return false;
+    if (teamQ) {
+      const teamHaystack = [club?.name, club?.shortName, club?.id, club?.league, player.clubName].join(' ').toLowerCase();
+      if (!teamHaystack.includes(teamQ)) return false;
+    }
+    return true;
   });
 }
 
@@ -1945,8 +1971,21 @@ function renderPlayerGrid(list, options) {
   const selectedAll = Boolean(sorted.length) && sorted.every(p => state.selected.has(String(p.id)));
   const selectedSome = sorted.some(p => state.selected.has(String(p.id)));
   const cols = `<colgroup><col class="col-check">${playerColumns.map(([key]) => `<col class="col-${esc(key)}">`).join('')}<col class="col-playerImage"><col class="col-details"></colgroup>`;
-  els.content.innerHTML = searchToolbar(club ? `Search ${club.name} squad…` : 'Search players…', '<span class="grid-note">Paste tab-separated Excel rows directly · click a column title to sort.</span>') + `<div class="table-wrap player-grid"><table>${cols}<thead><tr><th class="sticky-check"><input type="checkbox" id="selectAllPlayers" ${selectedAll ? 'checked' : ''} aria-label="Select all filtered players"></th>${playerColumns.map(([key, label]) => `<th class="player-col-${esc(key)}">${playerSortHeader(key, label)}</th>`).join('')}<th class="player-image-head player-col-faceMode">${playerSortHeader('faceMode', 'Image')}</th><th class="details-head"><span class="sr-only">Details</span></th></tr></thead><tbody id="playerBody">${rows.map(p => { const selected = state.selected.has(String(p.id)); return `<tr class="${selected ? 'selected' : ''}" data-player-row="${esc(p.id)}"><td class="sticky-check"><input type="checkbox" data-select-player="${esc(p.id)}" ${selected ? 'checked' : ''}></td>${playerColumns.map(([k, , t, c]) => `<td class="player-col-${esc(k)}">${playerCell(p, k, t, c)}</td>`).join('')}<td class="player-image-cell player-col-faceMode">${playerFaceCell(p)}</td><td class="details-cell"><button class="details-button" data-player-details="${esc(p.id)}" type="button" title="Open player details" aria-label="Open player details"><span aria-hidden="true">✎</span></button></td></tr>`; }).join('')}</tbody></table></div>${pager(sorted.length, pages, start, pageSize)}`;
+  const teamFilter = club ? '' : `<div class="search player-team-search"><input id="playerTeamSearchInput" placeholder="Filter by team…" value="${esc(state.playerTeamSearch)}" autocomplete="off"></div>`;
+  els.content.innerHTML = `<div class="toolbar player-search-toolbar"><div class="search"><input id="searchInput" placeholder="${esc(club ? `Search ${club.name} squad…` : 'Search players…')}" value="${esc(state.search)}"></div>${teamFilter}<span class="grid-note">Paste tab-separated Excel rows directly · click a column title to sort.</span></div>` + `<div class="table-wrap player-grid"><table>${cols}<thead><tr><th class="sticky-check"><input type="checkbox" id="selectAllPlayers" ${selectedAll ? 'checked' : ''} aria-label="Select all filtered players"></th>${playerColumns.map(([key, label]) => `<th class="player-col-${esc(key)}">${playerSortHeader(key, label)}</th>`).join('')}<th class="player-image-head player-col-faceMode">${playerSortHeader('faceMode', 'Image')}</th><th class="details-head"><span class="sr-only">Details</span></th></tr></thead><tbody id="playerBody">${rows.map(p => { const selected = state.selected.has(String(p.id)); return `<tr class="${selected ? 'selected' : ''}" data-player-row="${esc(p.id)}"><td class="sticky-check"><input type="checkbox" data-select-player="${esc(p.id)}" ${selected ? 'checked' : ''}></td>${playerColumns.map(([k, , t, c]) => `<td class="player-col-${esc(k)}">${playerCell(p, k, t, c)}</td>`).join('')}<td class="player-image-cell player-col-faceMode">${playerFaceCell(p)}</td><td class="details-cell"><button class="details-button" data-player-details="${esc(p.id)}" type="button" title="Open player details" aria-label="Open player details"><span aria-hidden="true">✎</span></button></td></tr>`; }).join('')}</tbody></table></div>${pager(sorted.length, pages, start, pageSize)}`;
   bindSearch();
+  const teamSearchInput = $('#playerTeamSearchInput');
+  teamSearchInput?.addEventListener('input', () => {
+    state.playerTeamSearch = teamSearchInput.value;
+    state.page = 1;
+    const selectionStart = teamSearchInput.selectionStart;
+    const selectionEnd = teamSearchInput.selectionEnd;
+    if (state.searchTimer) clearTimeout(state.searchTimer);
+    state.searchTimer = setTimeout(() => {
+      state.searchTimer = null;
+      rerenderKeepingInputFocus(teamSearchInput, 'playerTeamSearchInput', selectionStart, selectionEnd);
+    }, 90);
+  });
   const selectAll = $('#selectAllPlayers');
   if (selectAll) selectAll.indeterminate = selectedSome && !selectedAll;
   $('#addPlayer')?.addEventListener('click', () => { const p=newPlayer(club?.id || ''); state.db.data.players.unshift(p); markPlayerAdded(p); dirty(); refreshAutomaticClubRatingsForPlayers(p,{markDirty:true}); render(); });
