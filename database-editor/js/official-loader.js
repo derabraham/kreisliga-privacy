@@ -1,5 +1,5 @@
 import{clone,deriveConfederations,ensureIds,emptyData,contentHash}from'./core.js?v=20260822-20';
-import{ensureDatabaseSettings}from'./database-settings.js?v=20260822-20';
+import{ensureDatabaseSettings}from'./database-settings.js?v=20260825-01';
 import{resolveCompatiblePlayerPacks}from'./player-packs.js?v=20260822-20';
 
 // The editor lives in /database-editor/, while the website already has a shared
