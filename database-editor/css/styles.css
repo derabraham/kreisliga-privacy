@@ -314,3 +314,35 @@ tr.selected td{background:#10283c!important}
 .player-search-toolbar{flex-wrap:wrap}.player-search-toolbar>.search:first-child{min-width:260px}.player-search-toolbar .player-team-search{flex:0 1 340px;min-width:220px}.player-search-toolbar .grid-note{white-space:nowrap}@media(max-width:900px){.player-search-toolbar .player-team-search{flex:1 1 260px}.player-search-toolbar .grid-note{width:100%;margin-left:0}}
 
 .setting-toggle-row{grid-template-columns:1fr auto;cursor:pointer}.setting-toggle{appearance:none;width:46px!important;height:26px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);position:relative;cursor:pointer;transition:.18s ease}.setting-toggle:after{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;border-radius:50%;background:var(--muted);transition:.18s ease}.setting-toggle:checked{background:rgba(64,184,238,.24);border-color:rgba(64,184,238,.65)}.setting-toggle:checked:after{transform:translateX(20px);background:#fff}.setting-analysis{margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel-2)}.setting-analysis b,.setting-analysis span{display:block}.setting-analysis span{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.4}
+
+/* Competition eligibility: explicit, touch-friendly per-nation switches. */
+.competition-nation-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.competition-nation-actions span{margin-left:auto;color:var(--muted);font-size:12px}
+.competition-nation-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;max-height:230px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#08131f}
+.competition-nation-choice{display:flex;align-items:center;gap:8px;min-height:34px;padding:5px 7px;border-radius:7px;color:var(--text);cursor:pointer}
+.competition-nation-choice:hover{background:#142338}
+.competition-nation-choice input{width:17px;height:17px;accent-color:#48bde9;flex:none}
+
+.competition-nation-group{grid-column:1/-1;padding:7px 0 10px;border-bottom:1px solid var(--line)}
+.competition-nation-group:last-child{border-bottom:0}
+.competition-nation-group h3{margin:0 0 7px;color:#91dafc;font-size:12px;letter-spacing:.08em}
+.competition-nation-group h3 small{margin-left:6px;color:var(--muted);font-weight:500;letter-spacing:0}
+.competition-nation-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:5px}
+.competition-nation-flag{display:grid;place-items:center;flex:none;width:25px;height:18px;overflow:hidden;border-radius:3px;background:#102131}
+.competition-nation-flag .nation-flag{width:100%;height:100%;object-fit:cover}
+.competition-nation-flag .flag-empty{font-size:9px}
+.competition-rank-chip{display:inline-flex;align-items:center;gap:7px;color:var(--competition-rank-color)}
+.competition-rank-chip i{width:11px;height:11px;border-radius:3px;background:var(--competition-rank-color)}
+
+.competition-nation-group h3{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.competition-group-actions{display:flex;flex-wrap:wrap;gap:5px}
+.competition-group-actions .btn{font-size:10px;letter-spacing:0;font-weight:600;padding:4px 7px}
+.competition-color-row{display:flex;align-items:center;gap:9px;min-height:38px}
+.competition-color-row input[type=color]{width:48px;height:36px;padding:3px;cursor:pointer}
+.competition-color-swatch{width:52px;height:30px;flex:none;border:1px solid rgba(255,255,255,.22);border-radius:6px}
+.competition-color-row code{font-size:11px;color:#e4edf5}
+.competition-month-field[hidden] { display: none !important; }
+.competition-group-field[hidden] { display: none !important; }
+.competition-first-year[hidden] { display: none !important; }
+
+.competition-pair{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.competition-pair[hidden]{display:none!important}.competition-pair>.field{min-width:0}.competition-toggle{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#102032}.competition-toggle label{display:flex;align-items:center;gap:8px}.competition-toggle input{width:17px;height:17px;accent-color:#e44a97}.competition-toggle small{color:var(--muted)}

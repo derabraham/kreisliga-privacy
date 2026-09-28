@@ -5,6 +5,7 @@
 
 const SITE_ROOT = new URL('../../', import.meta.url);
 const CATALOG_URL = new URL('assets/data/player_pack_catalog.json', SITE_ROOT);
+const BUNDLED_CATALOG_URL = new URL('app-player-packs.json', import.meta.url);
 
 let catalogPromise = null;
 const packPayloadCache = new Map();
@@ -172,10 +173,19 @@ function convertPackPlayer(raw, packId, seasonId, resolvedClubId) {
 
 export async function playerPackCatalog() {
   if (!catalogPromise) {
-    catalogPromise = fetch(CATALOG_URL, { cache: 'no-cache' }).then(async response => {
-      if (!response.ok) throw new Error(`Player pack catalog: HTTP ${response.status}`);
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
+    catalogPromise = Promise.all([CATALOG_URL, BUNDLED_CATALOG_URL].map(async url => {
+      try {
+        const response = await fetch(url, { cache: 'no-cache' });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+      } catch (_) { return []; }
+    })).then(([site, bundled]) => {
+      // The site's older catalog can still contain only 25/26 packs. Keep the
+      // app catalog as a fallback for both seasons and prefer site overrides.
+      const byId = new Map(bundled.map(pack => [String(pack.id), pack]));
+      for (const pack of site) byId.set(String(pack.id), { ...byId.get(String(pack.id)), ...pack });
+      return [...byId.values()];
     });
   }
   return clone(await catalogPromise);

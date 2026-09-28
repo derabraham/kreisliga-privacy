@@ -1,6 +1,6 @@
 // Canonical Database / Era settings shared by custom databases and career runtime.
 // Stored in data/metadata.json as metadata.databaseSettings. Legacy databases normalize to modern defaults.
-export const DATABASE_SETTINGS_VERSION = 2;
+export const DATABASE_SETTINGS_VERSION = 3;
 export const DEFAULT_DATABASE_SETTINGS = Object.freeze({
   version: DATABASE_SETTINGS_VERSION,
   eraYear: 2026,
@@ -15,11 +15,18 @@ export const DEFAULT_DATABASE_SETTINGS = Object.freeze({
   clubRevenueScale: null,
   prizeMoneyScale: null,
   careerLeaguePlayerGateEnabled: false,
+  playersAge: true,
+  playerDevelopmentEnabled: true,
+  transfersEnabled: true,
+  youthTeamsEnabled: true,
+  contractsExpire: true,
+  financesEnabled: true,
   careerLeagueMinPlayersPerClub: 16
 });
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const numberOr=(v,f)=>Number.isFinite(Number(v))?Number(v):f;
 const inherit=v=>(v==null||v==='')?null:clamp(numberOr(v,1),0.01,4);
+const boolOrTrue=v=>v==null?true:(v===true||v===1||String(v).trim().toLowerCase()==='true'||String(v).trim()==='1');
 const boolOrFalse=v=>v===true||v===1||String(v||'').trim().toLowerCase()==='true'||String(v||'').trim()==='1';
 const ref=v=>String(v??'').trim();
 const lower=v=>ref(v).toLocaleLowerCase();
@@ -46,6 +53,12 @@ export function normalizeDatabaseSettings(value=null,fallbackYear=2026){
     clubRevenueScale:inherit(r.clubRevenueScale),
     prizeMoneyScale:inherit(r.prizeMoneyScale),
     careerLeaguePlayerGateEnabled:boolOrFalse(r.careerLeaguePlayerGateEnabled),
+    playersAge:boolOrTrue(r.playersAge),
+    playerDevelopmentEnabled:boolOrTrue(r.playerDevelopmentEnabled),
+    transfersEnabled:boolOrTrue(r.transfersEnabled),
+    youthTeamsEnabled:boolOrTrue(r.youthTeamsEnabled),
+    contractsExpire:boolOrTrue(r.contractsExpire),
+    financesEnabled:boolOrTrue(r.financesEnabled),
     careerLeagueMinPlayersPerClub:Math.round(clamp(numberOr(r.careerLeagueMinPlayersPerClub,16),1,40))
   };
 }

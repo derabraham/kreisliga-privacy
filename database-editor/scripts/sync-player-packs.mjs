@@ -14,14 +14,15 @@ function fileNameFor(pack) {
 }
 
 async function readCatalog() {
-  let raw;
-  try { raw = await fs.readFile(catalogPath, 'utf8'); }
-  catch (error) {
-    throw new Error(`Catalog not found: ${catalogPath}. Merge the Database Studio into the full website repository first. (${error.message})`);
-  }
-  const data = JSON.parse(raw);
-  if (!Array.isArray(data)) throw new Error('player_pack_catalog.json must contain an array.');
-  return data;
+  const bundledPath = path.join(siteRoot, 'js', 'app-player-packs.json');
+  const bundled = JSON.parse(await fs.readFile(bundledPath, 'utf8'));
+  let site = [];
+  try { site = JSON.parse(await fs.readFile(catalogPath, 'utf8')); }
+  catch (_) { /* The bundled app catalog is sufficient for a standalone build. */ }
+  if (!Array.isArray(site) || !Array.isArray(bundled)) throw new Error('Invalid player pack catalog.');
+  const byId = new Map(bundled.map(pack => [String(pack.id), pack]));
+  for (const pack of site) byId.set(String(pack.id), { ...byId.get(String(pack.id)), ...pack });
+  return [...byId.values()];
 }
 
 async function download(pack) {

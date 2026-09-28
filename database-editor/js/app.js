@@ -1070,12 +1070,33 @@ async function applyPendingNationFlag(nation) {
 
 function editLeague(id, nation, level) {
   const l = state.db.data.leagues.find(x => String(x.id) === String(id)) || null;
-  modal(l ? 'Edit league' : 'Add league', `<div class="form-grid">${field('League name', 'name', l?.name || '')}${field('Level', 'level', l?.level ?? level ?? 1, 'number', 'min="1"')}${field('Association', 'association', l?.association || '')}${field('Region', 'region', l?.region || '')}<div class="field full"><label>Nation</label><select name="nationId">${state.db.data.nations.slice().sort((a,b)=>nationDisplayName(a).localeCompare(nationDisplayName(b),'en')).map(n => `<option value="${esc(n.id)}" ${String(l?.nationId || nation?.id) === String(n.id) ? 'selected' : ''}>${esc(nationDisplayName(n))}</option>`).join('')}</select></div></div>`, '<button class="btn" data-cancel type="button">Cancel</button><button class="btn primary" id="saveLeague" type="button">Save league</button>');
+  const nationId = l?.nationId || nation?.id;
+  const adjacent = delta => state.db.data.leagues.filter(item => String(item.nationId) === String(nationId) && Number(item.level) === Number(l?.level ?? level ?? 1) + delta && !item.inactive).length;
+  modal(l ? 'Edit league' : 'Add league', `<div class="form-grid">${field('League name', 'name', l?.name || '')}${field('Level', 'level', l?.level ?? level ?? 1, 'number', 'min="1"')}${field('Association', 'association', l?.association || '')}${field('Region', 'region', l?.region || '')}<div class="field full"><strong>Promotion and relegation</strong><p>${adjacent(-1)} leagues above · ${adjacent(1)} leagues below. Leave a slot blank for automatic balancing with the adjacent tier.</p></div>${field('Promotion slots', 'promotionSlots', l?.promotionSlots ?? '', 'number', 'min="0" placeholder="Auto"')}${field('Relegation slots', 'relegationSlots', l?.relegationSlots ?? '', 'number', 'min="0" placeholder="Auto"')}<div class="field full"><label>Nation</label><select name="nationId">${state.db.data.nations.slice().sort((a,b)=>nationDisplayName(a).localeCompare(nationDisplayName(b),'en')).map(n => `<option value="${esc(n.id)}" ${String(l?.nationId || nation?.id) === String(n.id) ? 'selected' : ''}>${esc(nationDisplayName(n))}</option>`).join('')}</select></div></div>`, '<button class="btn" data-cancel type="button">Cancel</button><button class="btn primary" id="saveLeague" type="button">Save league</button>');
   $('[data-cancel]', els.modal).addEventListener('click', closeModal);
   $('#saveLeague').addEventListener('click', () => {
     const values = Object.fromEntries($$('[name]', els.modal).map(input => [input.name, input.value]));
     const targetNation = state.db.data.nations.find(n => String(n.id) === String(values.nationId));
     if (!values.name.trim() || !targetNation) return toast('League name and nation are required.', 'error');
+    const candidates = state.db.data.leagues.filter(row => row !== l).concat({ ...(l||{}), nationId:targetNation.id, level:Math.max(1,Number(values.level||1)), promotionSlots:values.promotionSlots===''?null:Number(values.promotionSlots), relegationSlots:values.relegationSlots===''?null:Number(values.relegationSlots) });
+    const currentCandidate = candidates[candidates.length - 1];
+    const nearby = candidates.filter(row => row !== currentCandidate && String(row.nationId) === String(targetNation.id) && !row.inactive);
+    const lowerNeighbor = nearby.filter(row => Number(row.level) === Number(currentCandidate.level) + 1);
+    const upperNeighbor = nearby.filter(row => Number(row.level) === Number(currentCandidate.level) - 1);
+    if (lowerNeighbor.length === 1 && currentCandidate.relegationSlots != null) lowerNeighbor[0] = { ...lowerNeighbor[0], promotionSlots: currentCandidate.relegationSlots };
+    if (upperNeighbor.length === 1 && currentCandidate.promotionSlots != null) upperNeighbor[0] = { ...upperNeighbor[0], relegationSlots: currentCandidate.promotionSlots };
+    for (const [neighbors, field] of [[lowerNeighbor,'promotionSlots'],[upperNeighbor,'relegationSlots']]) {
+      if (neighbors.length !== 1) continue;
+      const index = candidates.findIndex(row => row.id === neighbors[0].id);
+      if (index >= 0) candidates[index] = neighbors[0];
+    }
+    for (const upperLevel of [Number(values.level)-1,Number(values.level)]) {
+      const same=candidates.filter(row=>String(row.nationId)===String(targetNation.id)&&!row.inactive);
+      const above=same.filter(row=>Number(row.level)===upperLevel),below=same.filter(row=>Number(row.level)===upperLevel+1);
+      if (!above.length||!below.length||above.some(row=>row.relegationSlots==null||row.relegationSlots==='')||below.some(row=>row.promotionSlots==null||row.promotionSlots===''))continue;
+      const down=above.reduce((sum,row)=>sum+Number(row.relegationSlots||0),0),up=below.reduce((sum,row)=>sum+Number(row.promotionSlots||0),0);
+      if(down!==up)return toast(`${down} relegation slots above, but ${up} promotion slots below. Adjust one side or leave it on Auto.`,'error');
+    }
     const target = l || { id: makeId('LEAGUE'), leagueId: makeId('LEAGUE'), databaseId: state.db.manifest.databaseId };
     const oldName = target.name;
     target.name = values.name.trim();
@@ -1085,7 +1106,14 @@ function editLeague(id, nation, level) {
     target.nationId = targetNation.id;
     target.country = targetNation.name;
     target.databaseNation = targetNation.name;
+    target.promotionSlots = values.promotionSlots === '' ? null : Math.max(0, Math.floor(Number(values.promotionSlots) || 0));
+    target.relegationSlots = values.relegationSlots === '' ? null : Math.max(0, Math.floor(Number(values.relegationSlots) || 0));
     if (!l) state.db.data.leagues.push(target);
+    const sameNation = state.db.data.leagues.filter(row => row !== target && String(row.nationId) === String(target.nationId) && !row.inactive);
+    const tierBelow = sameNation.filter(row => Number(row.level) === target.level + 1);
+    const tierAbove = sameNation.filter(row => Number(row.level) === target.level - 1);
+    if (tierBelow.length === 1 && target.relegationSlots != null) tierBelow[0].promotionSlots = target.relegationSlots;
+    if (tierAbove.length === 1 && target.promotionSlots != null) tierAbove[0].relegationSlots = target.promotionSlots;
     if (oldName && oldName !== target.name) for (const c of state.db.data.clubs) if (String(c.leagueId) === String(target.id)) c.league = target.name;
     ensureIds(state.db.data, state.db.manifest.databaseId);
     dirty(); closeModal(); render();
@@ -2713,6 +2741,23 @@ function openPlayerDrawer(id) {
   $('#clearFace', drawer).addEventListener('click', () => { setPlayerFaceMode(p, 'placeholder'); toast('Player will use the game placeholder.'); drawer.remove(); render(); });
 }
 
+function competitionRank(comp) {
+  const explicit = Number(comp?.rank);
+  if (Number.isInteger(explicit) && explicit > 0) return explicit;
+  const preferred = { UCL:1, UEL:2, UECL:3, AFC_CL:1, AFC_CC:2, AFC_CH:3, CAF_CL:1, CAF_CC:2, CON_CL:1, CON_CC:2, SUD_CL:1, SUD_CS:2, OFC_CL:1 };
+  const code = String(comp?.code || comp?.ruleId || '').toUpperCase();
+  if (preferred[code]) return preferred[code];
+  const peers = state.db.data.competitions.filter(row => row.scope === 'club-international' && row.confederation === comp.confederation && row.ruleType !== 'club_world_cup');
+  return Math.max(1, peers.indexOf(comp) + 1);
+}
+
+// Matches the table and coefficient colours in the Android app.
+function competitionColor(comp) {
+  if (/^#[0-9a-f]{6}$/i.test(String(comp?.color || ''))) return comp.color;
+  const tier = competitionRank(comp);
+  return tier === 1 ? '#3b82f6' : tier === 2 ? '#f97316' : tier === 3 ? '#22c55e' : '#7c3aed';
+}
+
 function renderCompetitions() {
   const sortScope = 'competitions';
   els.title.textContent = 'Competitions';
@@ -2720,14 +2765,93 @@ function renderCompetitions() {
   els.actions.innerHTML = '<button class="btn primary" id="addCompetition" type="button">＋ Add competition</button>';
   const q = state.search.toLowerCase();
   let list = state.db.data.competitions.filter(x => !q || [x.name, x.code, x.ruleId, x.scope, x.confederation].join(' ').toLowerCase().includes(q));
-  list = sortTableRows(sortScope, list, (x, key) => ({ name: x.name || x.displayName || '', scope: x.scope || '', confederation: x.confederation || '', ruleId: x.ruleId || x.code || '', active: x.active !== false })[key]);
+  list.sort((a,b)=>String(a.confederation).localeCompare(String(b.confederation))||competitionRank(a)-competitionRank(b)||String(a.name).localeCompare(String(b.name)));
+  list = sortTableRows(sortScope, list, (x, key) => ({ name: x.name || x.displayName || '', scope: x.scope || '', confederation: x.confederation || '', rank: competitionRank(x), ruleId: x.ruleId || x.code || '', active: x.active !== false })[key]);
   const { rows, pages, start } = paginate(list);
-  els.content.innerHTML = searchToolbar('Search competition, rule code, scope or confederation…') + `<div class="table-wrap"><table class="competition-table"><thead><tr><th>${tableSortHeader(sortScope, 'name', 'Name')}</th><th>${tableSortHeader(sortScope, 'scope', 'Scope')}</th><th>${tableSortHeader(sortScope, 'confederation', 'Confederation')}</th><th class="rule-col">${tableSortHeader(sortScope, 'ruleId', 'Rule code')}</th><th>${tableSortHeader(sortScope, 'active', 'Active')}</th><th>Actions</th></tr></thead><tbody>${rows.map(x => `<tr><td><input class="cell-input" data-xid="${esc(x.id)}" data-key="name" value="${esc(x.name || x.displayName || '')}"></td><td><input class="cell-input" data-xid="${esc(x.id)}" data-key="scope" value="${esc(x.scope || '')}"></td><td><input class="cell-input" data-xid="${esc(x.id)}" data-key="confederation" value="${esc(x.confederation || '')}"></td><td class="rule-col"><input class="cell-input" data-xid="${esc(x.id)}" data-key="ruleId" value="${esc(x.ruleId || x.code || '')}"></td><td><select class="cell-select" data-xid="${esc(x.id)}" data-key="active"><option value="true" ${x.active !== false ? 'selected' : ''}>Yes</option><option value="false" ${x.active === false ? 'selected' : ''}>No</option></select></td><td><button class="btn small danger" data-delete-comp="${esc(x.id)}" type="button">Delete</button></td></tr>`).join('')}</tbody></table></div>${pager(list.length, pages, start)}`;
+  els.content.innerHTML = searchToolbar('Search competition, rule code, scope or confederation…') + `<div class="table-wrap"><table class="competition-table"><thead><tr><th>${tableSortHeader(sortScope, 'name', 'Name')}</th><th>${tableSortHeader(sortScope, 'scope', 'Scope')}</th><th>${tableSortHeader(sortScope, 'confederation', 'Confederation')}</th><th>${tableSortHeader(sortScope, 'rank', 'Rank')}</th><th class="rule-col">${tableSortHeader(sortScope, 'ruleId', 'Rule code')}</th><th>${tableSortHeader(sortScope, 'active', 'Active')}</th><th>Actions</th></tr></thead><tbody>${rows.map(x => `<tr><td><input class="cell-input" data-xid="${esc(x.id)}" data-key="name" value="${esc(x.name || x.displayName || '')}"></td><td><input class="cell-input" data-xid="${esc(x.id)}" data-key="scope" value="${esc(x.scope || '')}"></td><td><input class="cell-input" data-xid="${esc(x.id)}" data-key="confederation" value="${esc(x.confederation || '')}"></td><td><span class="competition-rank-chip" style="--competition-rank-color:${esc(competitionColor(x))}"><i></i><strong>${x.scope==='club-international' && x.ruleType!=='club_world_cup' ? competitionRank(x) : '–'}</strong></span></td><td class="rule-col"><input class="cell-input" data-xid="${esc(x.id)}" data-key="ruleId" value="${esc(x.ruleId || x.code || '')}"></td><td><select class="cell-select" data-xid="${esc(x.id)}" data-key="active"><option value="true" ${x.active !== false ? 'selected' : ''}>Yes</option><option value="false" ${x.active === false ? 'selected' : ''}>No</option></select></td><td><button class="btn small" data-edit-comp="${esc(x.id)}" type="button">Rules</button> <button class="btn small danger" data-delete-comp="${esc(x.id)}" type="button">Delete</button></td></tr>`).join('')}</tbody></table></div>${pager(list.length, pages, start)}`;
   bindSearch();
   bindTableSort(sortScope);
-  $('#addCompetition').addEventListener('click', () => { const id = makeId('COMP'); state.db.data.competitions.unshift({ id, code: id.split(':').pop().slice(0, 8), ruleId: 'CUSTOM', name: 'New Competition', displayName: 'New Competition', scope: 'club-international', confederation: 'UEFA', active: true, databaseId: state.db.manifest.databaseId }); dirty(); render(); });
+  $('#addCompetition').addEventListener('click', () => { const id = makeId('COMP'); state.db.data.competitions.unshift({ id, code: `CUSTOM_${id.replace(/[^a-z0-9]/gi,'').slice(-10).toUpperCase()}`, ruleId: 'CUSTOM', name: 'New Competition', displayName: 'New Competition', scope: 'club-international', confederation: 'UEFA', rank: Math.max(0,...state.db.data.competitions.filter(c=>c.confederation==='UEFA'&&c.scope==='club-international').map(competitionRank))+1, active: true, groupSize:8, direct:8, qualifyingRounds:[], databaseId: state.db.manifest.databaseId }); dirty(); render(); editCompetitionRules(id); });
   $$('[data-xid]').forEach(input => input.addEventListener('change', () => { const x = state.db.data.competitions.find(v => String(v.id) === String(input.dataset.xid)); x[input.dataset.key] = input.dataset.key === 'active' ? input.value === 'true' : input.value; if (input.dataset.key === 'name') x.displayName = input.value; dirty(); }));
+  $$('[data-edit-comp]').forEach(button => button.addEventListener('click', () => editCompetitionRules(button.dataset.editComp)));
   $$('[data-delete-comp]').forEach(button => button.addEventListener('click', () => { if (confirm('Delete this competition definition?')) { state.db.data.competitions = state.db.data.competitions.filter(x => String(x.id) !== String(button.dataset.deleteComp)); dirty(); render(); } }));
+}
+
+function editCompetitionRules(id) {
+  const comp = state.db.data.competitions.find(x => String(x.id) === String(id));
+  if (!comp) return;
+  const selected = Array.isArray(comp.eligibleNations) ? new Set(comp.eligibleNations.map(String)) : null;
+  const allNations = state.db.data.nations || [];
+  const confederations = state.db.data.confederations || [];
+  const confById = new Map(confederations.map(c => [String(c.id), confederationCode(c)]));
+  const confOf = n => String(n.confederation || confById.get(String(n.confederationId)) || n.confederationId || 'OTHER').toUpperCase();
+  const grouped = new Map();
+  for (const nation of allNations) {
+    const conf = confOf(nation);
+    if (!grouped.has(conf)) grouped.set(conf, []);
+    grouped.get(conf).push(nation);
+  }
+  const groupOrder = ['AFC','CAF','CONCACAF','CONMEBOL','OFC','UEFA','FIFA','WORLD'];
+  const orderedGroups = [...grouped.entries()].sort(([a],[b]) =>
+    (groupOrder.indexOf(a) < 0 ? 100 : groupOrder.indexOf(a)) - (groupOrder.indexOf(b) < 0 ? 100 : groupOrder.indexOf(b)) || a.localeCompare(b));
+  const confOptions = [...new Set(['FIFA',...orderedGroups.map(([code])=>code), String(comp.confederation || 'UEFA')])];
+  const nationChoices = orderedGroups.map(([code, entries]) => `<section class="competition-nation-group"><h3><span>${esc(code)} <small>${entries.length}</small></span><span class="competition-group-actions"><button class="btn small" type="button" data-comp-group="${esc(code)}" data-comp-group-state="all">Select all</button><button class="btn small" type="button" data-comp-group="${esc(code)}" data-comp-group-state="none">Clear all</button></span></h3><div class="competition-nation-group-grid">${entries.sort((a,b)=>nationDisplayName(a).localeCompare(nationDisplayName(b),'en')).map(n=>`<label class="competition-nation-choice"><input type="checkbox" data-confederation="${esc(code)}" name="eligibleNations" value="${esc(n.id)}" ${selected===null?code===String(comp.confederation||'UEFA').toUpperCase()?'checked':'':selected.has(String(n.id))||selected.has(String(n.name))?'checked':''}><span class="competition-nation-flag">${flagHtml(n)}</span><span>${esc(nationDisplayName(n))}</span></label>`).join('')}</div></section>`).join('');
+  modal('International competition rules', `<div class="form-grid">${field('Name','name',comp.name||'')}<div class="field"><label>Confederation for ranking</label><select name="confederation">${confOptions.map(code=>`<option value="${esc(code)}" ${code===String(comp.confederation||'UEFA')?'selected':''}>${esc(code)}</option>`).join('')}</select></div>${field('Rank within confederation','rank',competitionRank(comp),'number','min="1"')}${field('Teams','groupSize',comp.groupSize??8,'number','min="4"')}<div class="field"><label>First stage</label><select name="phaseFormat"><option value="league" ${comp.phaseFormat!=='groups'?'selected':''}>League phase</option><option value="groups" ${comp.phaseFormat==='groups'?'selected':''}>Groups of four</option></select></div><div class="field competition-group-field" ${comp.phaseFormat==='groups'?'':'hidden'}><label>Advance per group</label><select name="groupAdvance"><option value="1" ${comp.groupAdvance===1?'selected':''}>1</option><option value="2" ${comp.groupAdvance!==1?'selected':''}>2</option></select></div>${[['groupHomeAway','Group matches'],['knockoutHomeAway','Knockout ties']].map(([key,label])=>`<div class="field competition-group-field" ${comp.phaseFormat==='groups'?'':'hidden'}><label>${label}</label><select name="${key}"><option value="false" ${comp[key]===false?'selected':''}>One match</option><option value="true" ${comp[key]!==false?'selected':''}>Home and away</option></select></div>`).join('')}${field('Direct entrants','direct',comp.direct??8,'number','min="0"')}<div class="field"><label>When played</label><select name="scheduleMode"><option value="season" ${!comp.scheduleMode||comp.scheduleMode==='season'?'selected':''}>During season</option><option value="summer" ${comp.scheduleMode==='summer'?'selected':''}>Season end (June)</option><option value="months" ${comp.scheduleMode==='months'?'selected':''}>Selected months</option></select></div><div class="competition-pair competition-month-pair" ${comp.scheduleMode==='months'?'':'hidden'}><div class="field competition-month-field" ${comp.scheduleMode==='months'?'':'hidden'}><label>From month</label><select name="startMonth">${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${Number(comp.startMonth||2)===i+1?'selected':''}>${new Intl.DateTimeFormat('en',{month:'long'}).format(new Date(2026,i,1))}</option>`).join('')}</select></div><div class="field competition-month-field" ${comp.scheduleMode==='months'?'':'hidden'}><label>To month</label><select name="endMonth">${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${Number(comp.endMonth||4)===i+1?'selected':''}>${new Intl.DateTimeFormat('en',{month:'long'}).format(new Date(2026,i,1))}</option>`).join('')}</select></div></div><div class="competition-pair">${field('Every N years','intervalYears',comp.intervalYears||1,'number','min="1" max="20"')}<div class="field competition-first-year" ${Number(comp.intervalYears||1)>1?'':'hidden'}><label>First season</label><input name="startYear" type="number" min="1800" max="9999" value="${esc(comp.startYear||Number(state.db.data.metadata?.startYear||String(state.db.data.metadata?.startDate||'').slice(0,4))||2026)}"></div></div><div class="field competition-color-field"><label>Table colour</label><div class="competition-color-row"><input name="color" type="color" value="${esc(competitionColor(comp))}"><span class="competition-color-swatch" id="competitionColorSwatch" style="background:${esc(competitionColor(comp))}"></span><code id="competitionColorHex">${esc(competitionColor(comp).toUpperCase())}</code></div></div>${String(comp.code||'').startsWith('CUSTOM_') ? `<div class="field full competition-toggle"><label><input type="checkbox" name="minimumNationQualifying" ${comp.minimumNationQualifying===true?'checked':''}> Every eligible nation gets at least one qualifying place</label><small>Reserves a qualifying entrant from each selected nation; open group places are filled through automatic qualifying rounds.</small></div>` : ''}<div class="field full"><label>Eligible nations</label><div class="competition-nation-actions"><button class="btn small" type="button" id="selectAllCompNations">Select all</button><button class="btn small" type="button" id="clearCompNations">Clear all</button><span id="compNationCount"></span></div><div class="competition-nation-list" id="eligibleNationList">${nationChoices}</div><small>Untick a nation to exclude it from this cup. Higher ranked cups reserve their clubs first.</small></div></div>`, '<button class="btn" data-cancel type="button">Cancel</button><button class="btn primary" id="saveCompetitionRules" type="button">Save rules</button>');
+  $('[data-cancel]',els.modal).onclick=closeModal;
+  const nationBoxes=()=>$$('#eligibleNationList input[type=checkbox]',els.modal);
+  const updateNationCount=()=>{ const count=$('#compNationCount',els.modal); if(count) count.textContent=`${nationBoxes().filter(box=>box.checked).length} / ${allNations.length}`; };
+  $('#selectAllCompNations',els.modal).onclick=()=>{nationBoxes().forEach(box=>box.checked=true);updateNationCount();};
+  $('#clearCompNations',els.modal).onclick=()=>{nationBoxes().forEach(box=>box.checked=false);updateNationCount();};
+  $('#eligibleNationList',els.modal).addEventListener('change',updateNationCount);
+  $('#eligibleNationList',els.modal).addEventListener('click',event=>{
+    const button=event.target.closest('[data-comp-group]');
+    if(!button)return;
+    nationBoxes().filter(box=>box.dataset.confederation===button.dataset.compGroup).forEach(box=>box.checked=button.dataset.compGroupState==='all');
+    updateNationCount();
+  });
+  updateNationCount();
+  $('[name="intervalYears"]',els.modal)?.addEventListener('input',event=>{ const field=$('.competition-first-year',els.modal); if(field)field.hidden=Number(event.target.value)<=1; });
+  $('[name="phaseFormat"]',els.modal)?.addEventListener('change',event=>{ $$('.competition-group-field',els.modal).forEach(field=>field.hidden=event.target.value!=='groups'); });
+  $('[name="scheduleMode"]',els.modal)?.addEventListener('change',event=>{ $$('.competition-month-field',els.modal).forEach(field=>field.hidden=event.target.value!=='months'); const pair=$('.competition-month-pair',els.modal);if(pair)pair.hidden=event.target.value!=='months'; });
+  const colorInput=$('[name="color"]',els.modal);
+  colorInput?.addEventListener('input',()=>{ $('#competitionColorSwatch',els.modal).style.background=colorInput.value; $('#competitionColorHex',els.modal).textContent=colorInput.value.toUpperCase(); });
+  $('#saveCompetitionRules').onclick=()=>{
+    const get=name=>$(`[name="${name}"]`,els.modal)?.value;
+    const name=String(get('name')||'').trim();if(!name)return toast('Name required.','error');
+    const chosen=nationBoxes().filter(box=>box.checked).map(box=>box.value);
+    if(String(comp.code||'').startsWith('CUSTOM_')&&!chosen.length)return toast('Select at least one eligible nation.','error');
+    if(get('phaseFormat')==='groups'&&Number(get('groupSize'))%4!==0)return toast('Group competitions need a team count divisible by four.','error');
+    if(get('scheduleMode')!=='season'){
+      const start=get('scheduleMode')==='summer'?6:Number(get('startMonth'));
+      const end=get('scheduleMode')==='summer'?6:Number(get('endMonth'));
+      const invalid=start<7&&(end<start||end>6);
+      const days=(new Date(2027+(end<start?1:0),end,0)-new Date(2027,start-1,1))/86400000;
+      const rounds=3*(get('groupHomeAway')==='true'?2:1);
+      const qualifiers=Math.max(4,Math.ceil(Number(get('groupSize'))/4)*Number(get('groupAdvance')||2));
+      const minimum=rounds*3+(Math.ceil(Math.log2(qualifiers))-1)*(get('knockoutHomeAway')==='false'?3:5)+3;
+      if(invalid||(get('phaseFormat')==='groups'&&days<minimum))return toast('Choose a longer window for this format, within the July–June season.','error');
+    }
+    comp.name=name;comp.displayName=name;
+    comp.confederation=String(get('confederation')||comp.confederation||'UEFA');
+    comp.rank=Math.max(1,Math.floor(Number(get('rank'))||4));
+    comp.groupSize=Math.max(4,Math.floor(Number(get('groupSize'))||8));
+    comp.direct=Math.min(comp.groupSize,Math.max(0,Math.floor(Number(get('direct'))||0)));
+    comp.qualifyingRounds=[];
+    comp.color=get('color')||competitionColor(comp);
+    comp.phaseFormat=get('phaseFormat')==='groups'?'groups':'league';
+    comp.groupTeamCount=4;
+    comp.groupAdvance=Number(get('groupAdvance'))||2;
+    comp.groupHomeAway=get('groupHomeAway')==='true';
+    comp.knockoutHomeAway=get('knockoutHomeAway')!=='false';
+    comp.intervalYears=Math.max(1,Math.min(20,Number(get('intervalYears'))||1));
+    comp.startYear=Math.max(1800,Number(get('startYear'))||2026);
+    comp.scheduleMode=get('scheduleMode')||'season';
+    comp.startMonth=Number(get('startMonth'))||2;
+    comp.endMonth=Number(get('endMonth'))||4;
+    comp.eligibleNations=chosen;
+    comp.minimumNationQualifying=$('[name="minimumNationQualifying"]',els.modal)?.checked===true;
+    dirty();closeModal();render();
+  };
 }
 
 function renderValidator() {
@@ -2770,7 +2894,7 @@ function renderDatabaseSettings(){
   const toggleRow=(label,key,checked,help)=>`<label class="setting-row setting-toggle-row"><div><b>${esc(label)}</b><span class="setting-note">${esc(help)}</span></div><input class="setting-toggle" type="checkbox" data-db-toggle="${esc(key)}" ${checked?'checked':''}></label>`;
   const population=analyzeCareerLeaguePopulation(state.db.data,settings);
   els.actions.innerHTML='<button class="btn primary" id="saveDbSettings" type="button">Apply settings</button>';
-  els.content.innerHTML=`<div class="settings-grid"><div class="card settings-card"><h3>Era & economy</h3><p>Defaults reproduce the modern database. Inflation is applied by the game over career years; it does not rewrite stored player/club data.</p>${row('Era year','eraYear',settings.eraYear,1850,2200,1,'Reference year of this database.')}${row('Finance scale','financeScale',settings.financeScale,0.01,4,0.01,'1.00 = modern baseline; 0.10 ≈ 10% of modern monetary values.')}${row('Annual inflation','annualInflation',settings.annualInflation,-0.05,0.15,0.001,'0.04 = 4% per career year. Deterministic and capped in-game.')}${row('Attendance scale','attendanceScale',settings.attendanceScale,0.1,3,0.05,'Scales matchday attendance/revenue capacity without changing stadium records.')}${row('Transfer market activity','transferMarketActivity',settings.transferMarketActivity,0.1,2,0.05,'Global intensity for AI market movement.')}</div><div class="card settings-card"><h3>Player movement</h3><p>These affect future simulation decisions and generated players only. Existing historical players are never rewritten.</p>${row('Globalization factor','globalizationFactor',settings.globalizationFactor,0,2,0.05,'1.00 = modern baseline; lower values favor domestic movement.')}${row('Youth internationalization','youthInternationalization',settings.youthInternationalization,0,2,0.05,'Controls foreign diversity for future youth/newgens.')}</div><div class="card settings-card"><h3>Career league availability</h3><p>Limit new careers to leagues that already contain sufficiently complete real-player squads. This never deletes leagues from the KFMDB.</p>${toggleRow('Use career-ready leagues only','careerLeaguePlayerGateEnabled',settings.careerLeaguePlayerGateEnabled,'When enabled, a league is selectable and loaded into a new career only if every active senior club reaches the minimum database-player count. Other leagues remain editable in Database Studio.')}${row('Minimum players per club','careerLeagueMinPlayersPerClub',settings.careerLeagueMinPlayersPerClub,1,40,1,'Default: 16. Every active senior club in a league must reach this number.')}<div class="setting-analysis"><b>Current analysis</b><span>${population.eligibleLeagues.toLocaleString()} of ${population.totalLeagues.toLocaleString()} leagues currently meet the requirement.</span></div></div><div class="card settings-card"><h3>Advanced finance overrides</h3><p>Leave blank to inherit Finance Scale.</p>${row('Transfer value scale','transferValueScale',inherited('transferValueScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Wage scale','wageScale',inherited('wageScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Club revenue scale','clubRevenueScale',inherited('clubRevenueScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Prize money scale','prizeMoneyScale',inherited('prizeMoneyScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}</div></div>`;
+  els.content.innerHTML=`<div class="settings-grid"><div class="card settings-card"><h3>Era & economy</h3><p>Defaults reproduce the modern database. Inflation is applied by the game over career years; it does not rewrite stored player/club data.</p>${row('Era year','eraYear',settings.eraYear,1850,2200,1,'Reference year of this database.')}${row('Finance scale','financeScale',settings.financeScale,0.01,4,0.01,'1.00 = modern baseline; 0.10 ≈ 10% of modern monetary values.')}${row('Annual inflation','annualInflation',settings.annualInflation,-0.05,0.15,0.001,'0.04 = 4% per career year. Deterministic and capped in-game.')}${row('Attendance scale','attendanceScale',settings.attendanceScale,0.1,3,0.05,'Scales matchday attendance/revenue capacity without changing stadium records.')}${row('Transfer market activity','transferMarketActivity',settings.transferMarketActivity,0.1,2,0.05,'Global intensity for AI market movement.')}</div><div class="card settings-card"><h3>Player movement</h3><p>These affect future simulation decisions and generated players only. Existing historical players are never rewritten.</p>${row('Globalization factor','globalizationFactor',settings.globalizationFactor,0,2,0.05,'1.00 = modern baseline; lower values favor domestic movement.')}${row('Youth internationalization','youthInternationalization',settings.youthInternationalization,0,2,0.05,'Controls foreign diversity for future youth/newgens.')}</div><div class="card settings-card"><h3>Career rules</h3><p>Choose which simulation systems new careers from this database use.</p>${toggleRow('Players can age','playersAge',settings.playersAge,'Disable for timeless fantasy databases.')}${toggleRow('Players can develop','playerDevelopmentEnabled',settings.playerDevelopmentEnabled,'Disable for timeless fantasy databases.')}${toggleRow('Transfers are allowed','transfersEnabled',settings.transfersEnabled,'Disable for timeless fantasy databases.')}${toggleRow('Youth teams are enabled','youthTeamsEnabled',settings.youthTeamsEnabled,'Disable for timeless fantasy databases.')}${toggleRow('Contracts can expire','contractsExpire',settings.contractsExpire,'Disable for timeless fantasy databases.')}${toggleRow('Finances are enabled','financesEnabled',settings.financesEnabled,'Disable for timeless fantasy databases.')}</div><div class="card settings-card"><h3>Career league availability</h3><p>Limit new careers to leagues that already contain sufficiently complete real-player squads. This never deletes leagues from the KFMDB.</p>${toggleRow('Use career-ready leagues only','careerLeaguePlayerGateEnabled',settings.careerLeaguePlayerGateEnabled,'When enabled, a league is selectable and loaded into a new career only if every active senior club reaches the minimum database-player count. Other leagues remain editable in Database Studio.')}${row('Minimum players per club','careerLeagueMinPlayersPerClub',settings.careerLeagueMinPlayersPerClub,1,40,1,'Default: 16. Every active senior club in a league must reach this number.')}<div class="setting-analysis"><b>Current analysis</b><span>${population.eligibleLeagues.toLocaleString()} of ${population.totalLeagues.toLocaleString()} leagues currently meet the requirement.</span></div></div><div class="card settings-card"><h3>Advanced finance overrides</h3><p>Leave blank to inherit Finance Scale.</p>${row('Transfer value scale','transferValueScale',inherited('transferValueScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Wage scale','wageScale',inherited('wageScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Club revenue scale','clubRevenueScale',inherited('clubRevenueScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}${row('Prize money scale','prizeMoneyScale',inherited('prizeMoneyScale'),0.01,4,0.01,'Blank = inherit Finance Scale.')}</div></div>`;
   const gate=$('[data-db-toggle="careerLeaguePlayerGateEnabled"]');const min=$('[data-db-setting="careerLeagueMinPlayersPerClub"]');const sync=()=>{if(min)min.disabled=gate?.checked!==true};gate?.addEventListener('change',sync);sync();
   $('#saveDbSettings').onclick=()=>{const raw={...settings};$$('[data-db-setting]').forEach(input=>{raw[input.dataset.dbSetting]=input.value===''?null:Number(input.value)});$$('[data-db-toggle]').forEach(input=>{raw[input.dataset.dbToggle]=input.checked===true});state.db.data.metadata.databaseSettings=normalizeDatabaseSettings(raw,state.db.data.metadata.startYear);dirty();toast('Database settings updated.');renderDatabaseSettings()};
 }

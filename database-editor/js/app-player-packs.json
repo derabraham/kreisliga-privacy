@@ -1,0 +1,452 @@
+[
+  {
+    "id": "2627_top5_europe_01",
+    "name": "Top 5 Europe Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/01_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_western_europe_01",
+    "name": "Western Europe Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/02_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_northern_europe_01",
+    "name": "Northern Europe I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/03_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_northern_europe_02",
+    "name": "Northern Europe II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/04_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_central_europe_01",
+    "name": "Central Europe I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/05_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_central_europe_02",
+    "name": "Central Europe II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/06_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_southeast_europe_01",
+    "name": "Southeast Europe I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/07_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_romania_lower_01",
+    "name": "Romania Lower Leagues Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/08_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_southeast_europe_02",
+    "name": "Southeast Europe II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/09_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_eastern_europe_01",
+    "name": "Eastern Europe Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/10_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_eastern_europe_02",
+    "name": "Rest of Europe I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/11_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_top5_lower_01",
+    "name": "Top 5 Lower Leagues Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/12_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_south_america_01",
+    "name": "South America I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/13_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_south_america_02",
+    "name": "South America II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/14_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_north_america_01",
+    "name": "North America Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/15_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_asia_01",
+    "name": "Asia I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/16_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_asia_02",
+    "name": "Asia II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/17_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_africa_oceania_01",
+    "name": "Africa/Oceania I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/18_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_africa_oceania_02",
+    "name": "Africa/Oceania II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/19_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "2627_africa_oceania_03",
+    "name": "Africa/Oceania III Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database2627/20_players.json",
+    "databaseSeasonId": "26",
+    "targetDatabaseId": "official:26",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "premier_league",
+    "name": "Premier League Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/PremierLeague.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "laliga",
+    "name": "LaLiga Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/LaLiga.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "serie_a",
+    "name": "Serie A Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/SerieA.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "bundesliga",
+    "name": "Bundesliga Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/Bundesliga.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "ligue_1",
+    "name": "Ligue 1 Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/Ligue1.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "saudi",
+    "name": "Saudi Pro League Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/Saudi.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "argentina",
+    "name": "Argentina Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/Argentina.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "eredivisie",
+    "name": "Eredivisie Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/Eredivisie.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "ligaportugal",
+    "name": "Liga Portugal Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/LigaPortugal.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "superlig",
+    "name": "Turkish Super Lig Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/SuperLig.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "ligai",
+    "name": "Liga I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/LigaI.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "belgiumproleague",
+    "name": "Belgium Pro League Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/BelgiumProLeague.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "englandlower",
+    "name": "England 2-4 Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/England24.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "germanlower",
+    "name": "German 2-3 Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/German23.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "africa",
+    "name": "Africa Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/Africa.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "asiai",
+    "name": "Asia I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/AsiaI.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "asiaii",
+    "name": "Asia II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/AsiaII.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "northerneurope",
+    "name": "Northern Europe Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/NorthernEurope.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "mixedeuropeani",
+    "name": "Mixed Europe I Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/MixedEuropeanI.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "northamerica",
+    "name": "North America Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/NorthAmerica.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "southamerica",
+    "name": "South America Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/SouthAmerica.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "centraleurope",
+    "name": "Central Europe Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/CentralEurope.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "europemixedii",
+    "name": "Europe Mixed II Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/europemixedii.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "europeplus",
+    "name": "Europe Plus Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/europeplus.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  },
+  {
+    "id": "mystery",
+    "name": "Mystery Player Pack",
+    "url": "https://github.com/derabraham/player-databases/releases/download/player-database/mystery.json",
+    "databaseSeasonId": "25",
+    "targetDatabaseId": "official:25",
+    "compatibleDatabaseRevisions": [
+      "*"
+    ]
+  }
+]
